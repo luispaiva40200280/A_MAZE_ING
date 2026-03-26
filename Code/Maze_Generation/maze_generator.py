@@ -21,6 +21,12 @@ class MazeConfig(BaseModel):
     )
 
 
+"""
+TODO : PARSER AND THE READ OF THE config file 
+and the error handling and more animation
+"""
+
+
 class MazeGenerator:
     """ """
 
