@@ -10,11 +10,7 @@ N = 1  # 0001
 E = 2  # 0010
 S = 4  # 0100
 W = 8  # 1000
-PATTERN = ["1001 1111",
-           "1001 0001", 
-           "1111 1111", 
-           "0001 1000", 
-           "0001 1111"]
+PATTERN = ["1001 1111", "1001 0001", "1111 1111", "0001 1000", "0001 1111"]
 
 
 class MazeConfig(BaseModel):
@@ -33,7 +29,7 @@ class Cell:
     is_fortytwo: bool = False
 
     def get_render_strings(self) -> Tuple[str, str]:
-        # \033[42m = Bright Green BG | \033[100m = Dark Grey BG | \033[0m = 
+        # \033[42m = Bright Green BG | \033[100m = Dark Grey BG | \033[0m =
         # Default BG
         wall_bg = "\033[42m" if self.is_fortytwo else "\033[100m"
         reset = "\033[0m"
@@ -54,11 +50,11 @@ class MazeGenerator:
         self.config = maze_config
         self.width: int = maze_config.width
         self.height: int = maze_config.height
-        
+
         # 1. Define these BEFORE calling clamp_dimensions!
         self.entry = maze_config.entry
         self.exit = maze_config.exit
-        
+
         try:
             term_col, term_lines = os.get_terminal_size()
         except OSError:
@@ -82,6 +78,7 @@ class MazeGenerator:
         self.offset_y = 1
         self.box_offset_x = 1
         self.box_offset_y = 1
+
     def clamp_dimensions(self) -> None:
         # We NO LONGER care about the terminal size here!
         # The maximum size the maze can be to fit INSIDE our fixed 100x30 box:
@@ -114,7 +111,7 @@ class MazeGenerator:
                     coord_y = y_start + dy
                     self.protected_cells.add((coord_x, coord_y))
                     self.grid[coord_y][coord_x].is_fortytwo = True
-    
+
     def draw_ascii_grid(self) -> None:
         try:
             term_col, term_lines = os.get_terminal_size()
@@ -135,23 +132,29 @@ class MazeGenerator:
         print("\033[?1049h\033[2J\033[?25l", end="")
 
         # --- DRAW THE FIXED UI BOUNDING BOX ---
-        border_color = "\033[90m" 
+        border_color = "\033[90m"
         reset = "\033[0m"
-        
+
         # Calculate the top and bottom lines using the fixed box width
         top_border = f"{border_color}╭" + ("─" * (self.box_width - 2)) + f"╮{reset}"
         bottom_border = f"{border_color}╰" + ("─" * (self.box_width - 2)) + f"╯{reset}"
-        
+
         # Draw Top
         print(f"\033[{self.box_offset_y};{self.box_offset_x}H{top_border}")
-        
+
         # Draw Sides (using the fixed box height)
         for i in range(1, self.box_height - 1):
-            print(f"\033[{self.box_offset_y + i};{self.box_offset_x}H{border_color}│{reset}")
-            print(f"\033[{self.box_offset_y + i};{self.box_offset_x + self.box_width - 1}H{border_color}│{reset}")
-            
+            print(
+                f"\033[{self.box_offset_y + i};{self.box_offset_x}H{border_color}│{reset}"
+            )
+            print(
+                f"\033[{self.box_offset_y + i};{self.box_offset_x + self.box_width - 1}H{border_color}│{reset}"
+            )
+
         # Draw Bottom
-        print(f"\033[{self.box_offset_y + self.box_height - 1};{self.box_offset_x}H{bottom_border}")
+        print(
+            f"\033[{self.box_offset_y + self.box_height - 1};{self.box_offset_x}H{bottom_border}"
+        )
         sys.stdout.flush()
         # -------------------------------------
 
@@ -223,7 +226,7 @@ if __name__ == "__main__":
         time.sleep(1)
 
         maze_config = MazeConfig(
-            width=30, height=30, entry=(0, 0), exit=(29, 29), perfect=True
+            width=3, height=3, entry=(0, 0), exit=(299, 299), perfect=True
         )
         maze = MazeGenerator(maze_config)
         maze.generate_maze(starr_coord=maze.entry)
