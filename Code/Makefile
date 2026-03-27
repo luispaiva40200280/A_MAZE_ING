@@ -6,3 +6,5 @@ all: run
 run:
 	gnome-terminal --window --geometry=130x40 -- bash -c "python3 -m Maze_Generation.maze_generator; exec bash"
 
+run_v2:
+	gnome-terminal --window --geometry=130x40 -- bash -c "python3 -m Maze_Generation.maze_generator_version2; exec bash"

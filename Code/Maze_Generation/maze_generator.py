@@ -3,6 +3,7 @@ from typing import Tuple, List, Set
 import os
 import sys
 import time
+from .viewport import Viewport
 from Algor.prims import prims_algorithm
 from dataclasses import dataclass
 
@@ -10,7 +11,15 @@ N = 1  # 0001
 E = 2  # 0010
 S = 4  # 0100
 W = 8  # 1000
+<<<<<<< HEAD
 PATTERN = ["1001 1111", "1001 0001", "1111 1111", "0001 1000", "0001 1111"]
+=======
+PATTERN = ["101 111",
+           "101 001",
+           "111 111",
+           "001 100",
+           "001 111"]
+>>>>>>> 38e739a6e6ab26e4d5740a5e778568266dd2d611
 
 
 class MazeConfig(BaseModel):
@@ -28,18 +37,23 @@ class Cell:
     value: int = 15
     is_fortytwo: bool = False
 
+<<<<<<< HEAD
     def get_render_strings(self) -> Tuple[str, str]:
         # \033[42m = Bright Green BG | \033[100m = Dark Grey BG | \033[0m =
         # Default BG
+=======
+    # NEW: Added the `dust` parameter to accept animation frames!
+    def get_render_strings(self, dust: str = "  ") -> Tuple[str, str]:
+>>>>>>> 38e739a6e6ab26e4d5740a5e778568266dd2d611
         wall_bg = "\033[42m" if self.is_fortytwo else "\033[100m"
+        # \033[96m is Bright Cyan! This makes the dust glow as it carves.
+        dust_color = f"\033[96m{dust}\033[0m" if dust != "  " else "  "
         reset = "\033[0m"
-
-        # SYMMETRIC SQUARES: Everything is exactly 2 spaces wide!
         corner = f"{wall_bg}  {reset}"
-        north = f"{wall_bg}  {reset}" if (self.value & 1) else "  "
-        west = f"{wall_bg}  {reset}" if (self.value & 8) else "  "
-        center = f"{wall_bg}  {reset}" if self.value == 15 else "  "
-
+        # If the wall is broken, fill it with the glowing dust instead of empty space!
+        north = f"{wall_bg}  {reset}" if (self.value & 1) else dust_color
+        west = f"{wall_bg}  {reset}" if (self.value & 8) else dust_color
+        center = f"{wall_bg}  {reset}" if self.value == 15 else dust_color
         top = f"{corner}{north}"
         mid = f"{west}{center}"
         return top, mid
@@ -50,6 +64,7 @@ class MazeGenerator:
         self.config = maze_config
         self.width: int = maze_config.width
         self.height: int = maze_config.height
+<<<<<<< HEAD
 
         # 1. Define these BEFORE calling clamp_dimensions!
         self.entry = maze_config.entry
@@ -59,38 +74,39 @@ class MazeGenerator:
             term_col, term_lines = os.get_terminal_size()
         except OSError:
             term_col, term_lines = 130, 40
+=======
+        self.entry = maze_config.entry
+        self.exit = maze_config.exit
+>>>>>>> 38e739a6e6ab26e4d5740a5e778568266dd2d611
 
-        # Make the box relative to the window!
-        # Subtracting 8 columns and 4 lines gives a perfect
-        # padding around the outside of the box.
-        # We use max() just in case the user shrinks the window to a tiny square.
-        self.box_width = max(50, term_col - 12)
-        self.box_height = max(20, term_lines - 5)
-        # 3. NOW we can safely clamp everything
+        # NEW: Create the Viewport object!
+        self.viewport = Viewport(self.width, self.height)
+        
         self.clamp_dimensions()
 
-        # 4. Build the grid
         self.grid: List[list[Cell]] = [
             [Cell(x, y) for x in range(self.width)] for y in range(self.height)
         ]
         self.protected_cells: Set[Tuple[int, int]] = set()
+<<<<<<< HEAD
         self.offset_x = 1
         self.offset_y = 1
         self.box_offset_x = 1
         self.box_offset_y = 1
+=======
+
+        # Center the maze inside the Viewport's coordinates
+        maze_pixel_w = (self.width * 4) + 2
+        maze_pixel_h = (self.height * 2) + 1
+        self.offset_x = self.viewport.offset_x + (self.viewport.width - maze_pixel_w) // 2
+        self.offset_y = self.viewport.offset_y + (self.viewport.height - maze_pixel_h) // 2
+>>>>>>> 38e739a6e6ab26e4d5740a5e778568266dd2d611
 
     def clamp_dimensions(self) -> None:
-        # We NO LONGER care about the terminal size here!
-        # The maximum size the maze can be to fit INSIDE our fixed 100x30 box:
-        # We subtract 4 to leave a 2-character padding inside the box borders.
-        max_w = (self.box_width - 4) // 4
-        max_h = (self.box_height - 4) // 2
+        # Ask the viewport what the maximum sizes are!
+        self.width = max(11, min(self.width, self.viewport.max_maze_w))
+        self.height = max(7, min(self.height, self.viewport.max_maze_h))
 
-        # Force the dimensions to be within the box's strict limits!
-        self.width = max(11, min(self.width, max_w))
-        self.height = max(7, min(self.height, max_h))
-
-        # Force entry and exit to stay inside the newly clamped bounds!
         safe_entry_x = min(self.entry[0], self.width - 1)
         safe_entry_y = min(self.entry[1], self.height - 1)
         self.entry = (safe_entry_x, safe_entry_y)
@@ -113,23 +129,9 @@ class MazeGenerator:
                     self.grid[coord_y][coord_x].is_fortytwo = True
 
     def draw_ascii_grid(self) -> None:
-        try:
-            term_col, term_lines = os.get_terminal_size()
-        except OSError:
-            term_col, term_lines = 130, 40
-
-        # 1. Center the FIXED BOX on the terminal screen
-        self.box_offset_x = max(1, (term_col - self.box_width) // 2)
-        self.box_offset_y = max(1, (term_lines - self.box_height) // 2)
-
-        # 2. Center the MAZE inside the FIXED BOX
-        maze_pixel_w = (self.width * 4) + 2
-        maze_pixel_h = (self.height * 2) + 1
-        self.offset_x = self.box_offset_x + (self.box_width - maze_pixel_w) // 2
-        self.offset_y = self.box_offset_y + (self.box_height - maze_pixel_h) // 2
-
         os.system("cls" if os.name == "nt" else "clear")
         print("\033[?1049h\033[2J\033[?25l", end="")
+<<<<<<< HEAD
 
         # --- DRAW THE FIXED UI BOUNDING BOX ---
         border_color = "\033[90m"
@@ -158,6 +160,10 @@ class MazeGenerator:
         sys.stdout.flush()
         # -------------------------------------
 
+=======
+        # Just tell the viewport to draw itself!
+        self.viewport.draw()
+>>>>>>> 38e739a6e6ab26e4d5740a5e778568266dd2d611
         output = ""
         for y in range(self.height):
             top_row, mid_row = "", ""
@@ -169,7 +175,7 @@ class MazeGenerator:
 
                 if x == self.width - 1:
                     wall_bg = "\033[42m" if cell.is_fortytwo else "\033[100m"
-                    reset = "\033[0m"
+                    reset = "\033[48;5;235m"
                     east = f"{wall_bg}  {reset}" if (cell.value & 2) else "  "
                     top_row += f"{wall_bg}  {reset}"
                     mid_row += east
@@ -192,14 +198,23 @@ class MazeGenerator:
         print(output, end="", flush=True)
 
     def animated_frame(self, cell1: Cell, cell2: Cell) -> None:
-        for cell in [cell1, cell2]:
-            top, middle = cell.get_render_strings()
-            cx = self.offset_x + (cell.x_value * 4)
-            cy = self.offset_y + (cell.y_value * 2)
-            print(f"\033[{cy};{cx}H{top}", end="")
-            print(f"\033[{cy + 1};{cx}H{middle}", end="")
-        sys.stdout.flush()
-        time.sleep(0.015)  # Sped up slightly for the bigger maze!
+        # THE TWEENING FRAMES: Heavy static -> Medium -> Light -> Empty Space
+        dust_stages = ["▓▓", "▒▒", "░░", "  "]
+        
+        for dust in dust_stages:
+            for cell in [cell1, cell2]:
+                # Ask the cell to render itself wearing the current dust costume
+                top, middle = cell.get_render_strings(dust)
+                
+                cx = self.offset_x + (cell.x_value * 4)
+                cy = self.offset_y + (cell.y_value * 2)
+                
+                print(f"\033[{cy};{cx}H{top}", end="")
+                print(f"\033[{cy + 1};{cx}H{middle}", end="")
+            
+            sys.stdout.flush()
+            # A micro-delay for each frame creates the smooth fluid motion!
+            time.sleep(0.002)
 
     def generate_maze(self, starr_coord: Tuple[int, int]) -> None:
         self.carve_42_pattern()
@@ -213,11 +228,16 @@ class MazeGenerator:
             protected=self.protected_cells,
             on_step=self.animated_frame,
         )
-        end_y = self.offset_y + (self.height * 2) + 2
-
-        # RESTORE line wrap (\033[7h) and SHOW cursor (\033[?25h) so the terminal goes back to normal!
-        print(f"\033[{end_y};0H\033[7h\033[?25h")
-        print("\n\nMaze Generation Complete!!\n")
+        # Calculate exactly where the bottom of the UI box is
+        end_y = self.viewport.offset_y + self.viewport.height    
+        # Print a message right below the box
+        msg = "\033[92m ╰─▶ Generation Complete! Press [ENTER] to exit...\033[0m"
+        print(f"\033[{end_y};{self.viewport.offset_x}H{msg}", end="", flush=True)
+        # PAUSE THE SCRIPT! 
+        # This stops the terminal from scrolling down and breaking your UI box!
+        input()
+        # ONLY restore the terminal after they press Enter
+        print("\033[?1049l\033[?25h", end="")
 
 
 if __name__ == "__main__":
@@ -226,7 +246,11 @@ if __name__ == "__main__":
         time.sleep(1)
 
         maze_config = MazeConfig(
+<<<<<<< HEAD
             width=3, height=3, entry=(0, 0), exit=(299, 299), perfect=True
+=======
+            width=30, height=30, entry=(0, 0), exit=(299, 299), perfect=True
+>>>>>>> 38e739a6e6ab26e4d5740a5e778568266dd2d611
         )
         maze = MazeGenerator(maze_config)
         maze.generate_maze(starr_coord=maze.entry)
