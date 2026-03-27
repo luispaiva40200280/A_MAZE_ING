@@ -3,7 +3,7 @@ from typing import Tuple, List, Set
 import os
 import sys
 import time
-from Algor.prims import prims_algorithm
+from Code.Algor.prims import prims_algorithm
 from dataclasses import dataclass
 
 N = 1  # 0001

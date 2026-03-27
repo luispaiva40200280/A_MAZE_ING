@@ -2,7 +2,7 @@ import random
 from typing import List, Tuple, Set, Callable, Any
 
 DIRECTIONS = [
-    (0, -1, 1, 4),  # North
+    (0, -1, 1, 4),  # North 0001
     (1, 0, 2, 8),  # East
     (0, 1, 4, 1),  # South
     (-1, 0, 8, 2),  # West
