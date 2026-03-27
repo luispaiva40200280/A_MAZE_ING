@@ -10,7 +10,11 @@ N = 1  # 0001
 E = 2  # 0010
 S = 4  # 0100
 W = 8  # 1000
-PATTERN = ["1001 1111", "1001 0001", "1111 1111", "0001 1000", "0001 1111"]
+PATTERN = ["1001 1111",
+           "1001 0001", 
+           "1111 1111", 
+           "0001 1000", 
+           "0001 1111"]
 
 
 class MazeConfig(BaseModel):
@@ -155,7 +159,7 @@ if __name__ == "__main__":
         time.sleep(1)
 
         maze_config = MazeConfig(
-            width=30, height=20, entry=(0, 0), exit=(29, 19), perfect=True
+            width=50, height=50, entry=(20, 20), exit=(49, 0), perfect=True
         )
         maze = MazeGenerator(maze_config)
         maze.generate_maze(starr_coord=maze_config.entry)

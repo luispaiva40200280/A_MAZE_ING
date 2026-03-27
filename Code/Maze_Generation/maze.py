@@ -22,7 +22,6 @@ class MazeConfig(BaseModel):
         ...,
     )
 
-
 @dataclass
 class Cell:
     x_value: int
@@ -31,19 +30,24 @@ class Cell:
     is_fortytwo: bool = False
 
     def get_render_strings(self) -> Tuple[str, str]:
-        wall_bg = "\033[42m" if self.is_fortytwo else "\033[100m"
+        # \033[92m = Green Text | \033[90m = Dark Grey Text
+        text_color = "\033[92m" if self.is_fortytwo else "\033[90m"
         reset = "\033[0m"
 
-        corner = f"{wall_bg}  {reset}"
-        north = f"{wall_bg}  {reset}" if (self.value & 1) else "  "
-        west = f"{wall_bg}  {reset}" if (self.value & 8) else "  "
-        center = f"{wall_bg}  {reset}" if self.value == 15 else "  "
+        # upgraded "Font": Sleek Unicode Box Drawing Characters
+        corner = "╋"
+        north = "━━━" if (self.value & 1) else "   "
+        west = "┃" if (self.value & 8) else " "
+        
+        # If this cell is the 42, fill the inside with a solid block!
+        if self.is_fortytwo:
+            center = "███"
+        else:
+            center = "   " # Normal maze paths stay empty
 
-        top = f"{corner}{north}"
-        mid = f"{west}{center}"
+        top = f"{text_color}{corner}{north}{reset}"
+        mid = f"{text_color}{west}{center}{reset}"
         return top, mid
-
-
 """
 TODO : PARSER AND THE READ OF THE config file
 and the error handling and more animation
@@ -84,15 +88,13 @@ class MazeGenerator:
         except OSError:
             term_col, term_lines = 80, 24
 
-        maze_w = (self.width * 4) + 2
+        maze_w = (self.width * 4) + 1
         maze_h = (self.height * 2) + 1
 
         self.offset_x = max(1, (term_col - maze_w) // 2)
         self.offset_y = max(1, (term_lines - maze_h) // 2)
 
         os.system("cls" if os.name == "nt" else "clear")
-
-        # \033[2J = Force wipe the whole screen so no old text shows through!
         print("\033[2J\033[7l\033[?25l", end="")
 
         output = ""
@@ -104,29 +106,31 @@ class MazeGenerator:
                 top_row += top
                 mid_row += mid
 
+                # The East Boundary (Updated to Unicode ┃ and ╋)
                 if x == self.width - 1:
-                    wall_bg = "\033[42m" if cell.is_fortytwo else "\033[100m"
+                    text_color = "\033[92m" if cell.is_fortytwo else "\033[90m"
                     reset = "\033[0m"
-                    east = f"{wall_bg} {reset}" if (cell.value & 2) else " "
-                    top_row += f"{wall_bg} {reset}"
-                    mid_row += east
+                    east = "┃" if (cell.value & 2) else " "
+                    top_row += f"{text_color}╋{reset}"
+                    mid_row += f"{text_color}{east}{reset}"
 
             output += f"\033[{self.offset_y + (y * 2)};{self.offset_x}H{top_row}"
             output += f"\033[{self.offset_y + (y * 2) + 1};{self.offset_x}H{mid_row}"
 
+        # The South Boundary (Updated to Unicode ━━━ and ╋)
         boot_row = ""
         for x in range(self.width):
             cell = self.grid[self.height - 1][x]
-            wall_bg = "\033[42m" if cell.is_fortytwo else "\033[100m"
+            text_color = "\033[92m" if cell.is_fortytwo else "\033[90m"
             reset = "\033[0m"
-            south = f"{wall_bg}   {reset}" if (cell.value & 4) else "   "
-            boot_row += f"{wall_bg} {reset}{south}"
+            south = "━━━" if (cell.value & 4) else "   "
+            boot_row += f"{text_color}╋{south}{reset}"
 
-        # Get the color for the very last pixel on the bottom right
+        # The final bottom-right corner
         last_cell = self.grid[self.height - 1][self.width - 1]
-        last_wall_bg = "\033[42m" if last_cell.is_fortytwo else "\033[100m"
+        last_text_color = "\033[92m" if last_cell.is_fortytwo else "\033[90m"
 
-        output += f"\033[{self.offset_y + (self.height * 2)};{self.offset_x}H{boot_row}{last_wall_bg} \033[0m"
+        output += f"\033[{self.offset_y + (self.height * 2)};{self.offset_x}H{boot_row}{last_text_color}╋{reset}"
         print(output, end="", flush=True)
 
     def animated_frame(self, cell1: Cell, cell2: Cell) -> None:
