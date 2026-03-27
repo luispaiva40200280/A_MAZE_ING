@@ -10,11 +10,11 @@ N = 1  # 0001
 E = 2  # 0010
 S = 4  # 0100
 W = 8  # 1000
-PATTERN = ["1001 1111",
-           "1001 0001", 
-           "1111 1111", 
-           "0001 1000", 
-           "0001 1111"]
+PATTERN = ["101 111",
+           "101 001",
+           "111 111",
+           "001 100",
+           "001 111"]
 
 
 class MazeConfig(BaseModel):
@@ -32,17 +32,20 @@ class Cell:
     value: int = 15
     is_fortytwo: bool = False
 
-    def get_render_strings(self) -> Tuple[str, str]:
-        # \033[42m = Bright Green BG | \033[100m = Dark Grey BG | \033[0m = 
-        # Default BG
+    # NEW: Added the `dust` parameter to accept animation frames!
+    def get_render_strings(self, dust: str = "  ") -> Tuple[str, str]:
         wall_bg = "\033[42m" if self.is_fortytwo else "\033[100m"
+        
+        # \033[96m is Bright Cyan! This makes the dust glow as it carves.
+        dust_color = f"\033[96m{dust}\033[0m" if dust != "  " else "  "
         reset = "\033[0m"
 
-        # SYMMETRIC SQUARES: Everything is exactly 2 spaces wide!
         corner = f"{wall_bg}  {reset}"
-        north = f"{wall_bg}  {reset}" if (self.value & 1) else "  "
-        west = f"{wall_bg}  {reset}" if (self.value & 8) else "  "
-        center = f"{wall_bg}  {reset}" if self.value == 15 else "  "
+        
+        # If the wall is broken, fill it with the glowing dust instead of empty space!
+        north = f"{wall_bg}  {reset}" if (self.value & 1) else dust_color
+        west = f"{wall_bg}  {reset}" if (self.value & 8) else dust_color
+        center = f"{wall_bg}  {reset}" if self.value == 15 else dust_color
 
         top = f"{corner}{north}"
         mid = f"{west}{center}"
@@ -82,6 +85,7 @@ class MazeGenerator:
         self.offset_y = 1
         self.box_offset_x = 1
         self.box_offset_y = 1
+
     def clamp_dimensions(self) -> None:
         # We NO LONGER care about the terminal size here!
         # The maximum size the maze can be to fit INSIDE our fixed 100x30 box:
@@ -189,14 +193,23 @@ class MazeGenerator:
         print(output, end="", flush=True)
 
     def animated_frame(self, cell1: Cell, cell2: Cell) -> None:
-        for cell in [cell1, cell2]:
-            top, middle = cell.get_render_strings()
-            cx = self.offset_x + (cell.x_value * 4)
-            cy = self.offset_y + (cell.y_value * 2)
-            print(f"\033[{cy};{cx}H{top}", end="")
-            print(f"\033[{cy + 1};{cx}H{middle}", end="")
-        sys.stdout.flush()
-        time.sleep(0.015)  # Sped up slightly for the bigger maze!
+        # THE TWEENING FRAMES: Heavy static -> Medium -> Light -> Empty Space
+        dust_stages = ["▓▓", "▒▒", "░░", "  "]
+        
+        for dust in dust_stages:
+            for cell in [cell1, cell2]:
+                # Ask the cell to render itself wearing the current dust costume
+                top, middle = cell.get_render_strings(dust)
+                
+                cx = self.offset_x + (cell.x_value * 4)
+                cy = self.offset_y + (cell.y_value * 2)
+                
+                print(f"\033[{cy};{cx}H{top}", end="")
+                print(f"\033[{cy + 1};{cx}H{middle}", end="")
+            
+            sys.stdout.flush()
+            # A micro-delay for each frame creates the smooth fluid motion!
+            time.sleep(0.002)
 
     def generate_maze(self, starr_coord: Tuple[int, int]) -> None:
         self.carve_42_pattern()
@@ -223,7 +236,7 @@ if __name__ == "__main__":
         time.sleep(1)
 
         maze_config = MazeConfig(
-            width=30, height=30, entry=(0, 0), exit=(29, 29), perfect=True
+            width=300, height=300, entry=(0, 0), exit=(299, 299), perfect=True
         )
         maze = MazeGenerator(maze_config)
         maze.generate_maze(starr_coord=maze.entry)

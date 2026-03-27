@@ -4,5 +4,5 @@
 all: run
 
 run:
-	gnome-terminal --window --geometry=130x40 -- bash -c "python3 -m Maze_Generation.maze_generator; exec bash"
+	gnome-terminal --window --maximize -- bash -c "python3 -m Maze_Generation.maze_generator; exec bash"
 
