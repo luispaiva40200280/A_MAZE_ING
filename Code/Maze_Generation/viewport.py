@@ -10,7 +10,7 @@ class Viewport:
             term_col, term_lines = 130, 40
 
         # 1. Calculate Ideal Box Size
-        target_box_w = (requested_maze_w * 4) + 6 
+        target_box_w = (requested_maze_w * 4) + 6
         target_box_h = (requested_maze_h * 2) + 5
 
         # 2. Apply Terminal Limits
@@ -30,17 +30,18 @@ class Viewport:
         self.max_maze_h = (self.height - 5) // 2
 
     def draw(self) -> None:
-        # \033[48;5;235m = Deep Slate Grey Background!
-        # \033[38;5;250m = Light Grey Text for the borders
         border_color = "\033[1;97m"
         reset = "\033[0m"
 
-        top_border = f"{border_color}╭" + ("─" * (self.width - 2)) + f"╮{reset}"
-        bottom_border = f"{border_color}╰" + ("─" * (self.width - 2)) + f"╯{reset}"
-        # To make the background solid, we fill the middle with colored spaces!
-        empty_line = f"{border_color}│" + (" " * (self.width - 2)) + f"│{reset}"
+        top_border = (f"{border_color}╭" +
+                      ("─" * (self.width - 2)) + f"╮{reset}")
+        bottom_border = (f"{border_color}╰" +
+                         ("─" * (self.width - 2)) + f"╯{reset}")
+        empty_line = (f"{border_color}│" +
+                      (" " * (self.width - 2)) + f"│{reset}")
         print(f"\033[{self.offset_y};{self.offset_x}H{top_border}")
         for i in range(1, self.height - 1):
             print(f"\033[{self.offset_y + i};{self.offset_x}H{empty_line}")
-        print(f"\033[{self.offset_y + self.height - 1};{self.offset_x}H{bottom_border}")
+        print(f"\033[{self.offset_y + self.height - 1};\
+{self.offset_x}H{bottom_border}")
         sys.stdout.flush()
