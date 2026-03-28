@@ -1,9 +1,36 @@
+"""
+Terminal UI scaling and rendering engine.
+Handles mathematical calculations to adapt the maze visualization to varying
+terminal window sizes safely.
+"""
 import os
 import sys
 
 
 class Viewport:
+    """
+    Creates a responsive, centered ASCII UI bounding box that acts as a canvas
+    for the maze generator.
+    Attributes:
+        width (int): The finalized width of the UI box (in terminal columns).
+        height (int): The finalized height of the UI box (in terminal rows).
+        offset_x (int): The absolute starting X coordinate to center the box
+        on screen.
+        offset_y (int): The absolute starting Y coordinate to center the box
+        on screen.
+        max_maze_w (int): The mathematical limit for how wide a maze can be
+        without breaking the box.
+        max_maze_h (int): The mathematical limit for how tall a maze can be
+        without breaking the box.
+    """
     def __init__(self, requested_maze_w: int, requested_maze_h: int):
+        """
+        Initializes the Viewport by comparing the requested maze dimensions
+        against the physical constraints of the user's terminal window.
+        Args:
+            requested_maze_w (int): The user's desired maze width.
+            requested_maze_h (int): The user's desired maze height.
+        """
         try:
             term_col, term_lines = os.get_terminal_size()
         except OSError:
@@ -30,6 +57,12 @@ class Viewport:
         self.max_maze_h = (self.height - 5) // 2
 
     def draw(self) -> None:
+        """
+        Renders the outer bounding box UI to the terminal using ANSI escape
+        codes.
+        Leaves the interior space transparent so the terminal background shows
+        through.
+        """
         border_color = "\033[1;97m"
         reset = "\033[0m"
 

@@ -4,6 +4,7 @@ from Maze_Generation.helper_maze_classes import MazeConfig
 from Maze_Generation.maze_generator import MazeGenerator
 
 if __name__ == "__main__":
+    """quik test for mazegenerator"""
     try:
         print("Initializing Maze Generator...")
         time.sleep(1)

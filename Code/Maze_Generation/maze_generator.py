@@ -1,3 +1,8 @@
+"""The core Maze Generator Engine.
+Combines configuration, UI scaling, matrix construction,
+and rendering animation into a single responsive terminal
+application.
+"""
 from Algor.prims import prims_algorithm
 from .viewport import Viewport
 from .helper_maze_classes import Cell, MazeConfig
@@ -6,12 +11,37 @@ import os
 import sys
 import time
 
-
-PATTERN = ["101 111", "101 001", "111 111", "001 100", "001 111"]
+"""bitmapfor 42"""
+PATTERN = ["101 111",
+           "101 001",
+           "111 111",
+           "001 100",
+           "001 111"]
 
 
 class MazeGenerator:
+    """
+    Orchestrates the creation, logic, and rendering of the maze.
+    Attributes:
+        config (MazeConfig): The verified configuration settings.
+        width (int): The finalized, safely clamped width of the maze.
+        height (int): The finalized, safely clamped height of the maze.
+        entry (Tuple[int, int]): Safe (x, y) coordinates for the start of the
+        maze.
+        exit (Tuple[int, int]): Safe (x, y) coordinates for the end of the
+        maze.
+        viewport (Viewport): The bounding box UI and terminal math handler.
+        grid (List[list[Cell]]): A 2D matrix containing the maze Cell objects.
+        protected_cells (Set[Tuple[int, int]]): Coordinates of cells that
+        generation algorithms cannot alter.
+    """
     def __init__(self, maze_config: MazeConfig) -> None:
+        """
+        Initializes the generator pipeline. Calculates dynamic sizing, builds
+        the grid data structure, and prepares for algorithm execution.
+        Args:
+            maze_config (MazeConfig): Validated configuration parameters.
+        """
         self.config = maze_config
         self.width: int = maze_config.width
         self.height: int = maze_config.height
@@ -26,8 +56,10 @@ class MazeGenerator:
         self.protected_cells: Set[Tuple[int, int]] = set()
 
     def calculate_offsets(self) -> None:
-        """Calculates the exact coordinates to center the maze
-        inside the Viewport.
+        """
+        Calculates the exact terminal cursor coordinates required to perfectly
+        center the physical maze structure inside of the dynamically drawn
+        Viewport UI.
         """
         maze_pixel_w = (self.width * 4) + 2
         maze_pixel_h = (self.height * 2) + 1
@@ -38,6 +70,11 @@ class MazeGenerator:
                          (self.viewport.height - maze_pixel_h) // 2)
 
     def clamp_dimensions(self) -> None:
+        """
+        Enforces physical limitations on the maze structure.
+        Ensures the maze dimensions and entry/exit points do not exceed the
+        boundaries established by the Viewport's terminal safety checks.
+        """
         # Ask the viewport what the maximum sizes are!
         self.width = max(11, min(self.width, self.viewport.max_maze_w))
         self.height = max(7, min(self.height, self.viewport.max_maze_h))
@@ -51,6 +88,11 @@ class MazeGenerator:
         self.exit = (safe_exit_x, safe_exit_y)
 
     def carve_42_pattern(self) -> None:
+        """
+        Injects the hardcoded '42' pattern into the center of the maze grid.
+        Flags affected cells as 'protected' so pathfinding algorithms route
+        around them instead of destroying the pattern.
+        """
         width_patt = len(PATTERN[0])
         height_patt = len(PATTERN)
         x_start = (self.width // 2) - (width_patt // 2)
@@ -64,6 +106,11 @@ class MazeGenerator:
                     self.grid[coord_y][coord_x].is_fortytwo = True
 
     def draw_ascii_grid(self) -> None:
+        """
+        Renders the initial closed-grid state of the maze to the terminal.
+        Prepares the alternate screen buffer, hides the cursor, draws the
+        bounding Viewport, and paints every closed cell block-by-block.
+        """
         os.system("cls" if os.name == "nt" else "clear")
         print("\033[?1049h\033[2J\033[?25l", end="")
         self.viewport.draw()
@@ -104,7 +151,14 @@ class MazeGenerator:
         print(output, end="", flush=True)
 
     def animated_frame(self, cell1: Cell, cell2: Cell) -> None:
-        # THE TWEENING FRAMES: Heavy static -> Medium -> Light -> Empty Space
+        """
+        A callback function triggered by Prim's Algorithm to draw walls
+        breaking in real-time. Applies a 'tweening' animation sequence
+        to simulate walls dissolving into dust.
+        Args:
+            cell1 (Cell): The parent cell being extended from.
+            cell2 (Cell): The newly carved neighbor cell.
+        """
         dust_stages = ["▓▓", "▒▒", "░░", "  "]
 
         for dust in dust_stages:
@@ -118,6 +172,15 @@ class MazeGenerator:
             time.sleep(0.002)
 
     def generate_maze(self, starr_coord: Tuple[int, int]) -> None:
+        """
+        The main execution pipeline for the maze generator.
+        Carves the pattern, renders the UI, and initiates the
+        pathfinding algorithm. Locks the terminal process until
+        the user acknowledges completion.
+        Args:
+            starr_coord (Tuple[int, int]): The (x, y) coordinate
+            indicating where the generation algorithm should begin digging.
+        """
         self.carve_42_pattern()
         self.draw_ascii_grid()
         prims_algorithm(
