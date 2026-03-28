@@ -44,7 +44,7 @@ def prims_algorithm(
         from altering. Defaults to None.
         on_step (Callable[[Any, Any], None] | None, optional): A callback
         function triggered
-            every time a wall is broken. It receives the two connected Cell 
+            every time a wall is broken. It receives the two connected Cell
             objects as arguments.
             Used to drive the step-by-step UI animation. Defaults to None.
     """
@@ -56,7 +56,7 @@ def prims_algorithm(
 
     def add_to_frontier(x_pos: int, y_pos: int) -> None:
         """
-        Scans the 4 cardinal directions around a given cell and adds valid, 
+        Scans the 4 cardinal directions around a given cell and adds valid,
         uncarved neighbors to the frontier list.
         """
         for dx, dy, _, _ in DIRECTIONS:
