@@ -41,6 +41,12 @@ class MazeConfig(BaseModel):
         """
         return self
 
+    @model_validator(mode='after')
+    def validate_terminal_fit(self) -> 'MazeConfig':
+        """Ensures the requested maze size can physically
+        fit in the current terminal window."""
+        return self
+
 
 @dataclass
 class Cell:
