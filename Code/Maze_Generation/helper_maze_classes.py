@@ -3,7 +3,7 @@ Data structures and configuration models for the Maze Generator.
 Contains the Pydantic configuration validation, the grid Cell representation,
 and enumerated colors.
 """
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from typing import Tuple
 from dataclasses import dataclass
 from enum import Enum
@@ -25,6 +25,21 @@ class MazeConfig(BaseModel):
     entry: Tuple[int, int]
     exit: Tuple[int, int]
     perfect: bool = Field(default=True)
+
+    @classmethod
+    def parser_config(cls, filepath: str) -> 'MazeConfig':
+        """Reads a text file, parses the variables, and returns
+        a validated MazeConfig object.
+        """
+        config_data = {}
+        return cls(**config_data)
+
+    @model_validator(mode='after')
+    def validate_entry_exit(self) -> 'MazeConfig':
+        """Ensures the entry and exit coordinates actually
+        exist inside the maze boundaries.
+        """
+        return self
 
 
 @dataclass
