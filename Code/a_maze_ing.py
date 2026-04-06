@@ -10,15 +10,12 @@ if __name__ == "__main__":
         time.sleep(1)
 
         # 1. Setup the Configuration
-        maze_config = MazeConfig(
-            width=50,
-            height=50,
-            entry=(20, 20),
-            exit=(49, 0),
-            perfect=True
-        )
-        maze = MazeGenerator(maze_config)
-        maze.generate_maze(starr_coord=maze.entry)
-    except KeyboardInterrupt:
+        try:
+            maze_config = MazeConfig.parser_file("Configs/config.txt")
+            maze = MazeGenerator(maze_config)
+            maze.generate_maze(starr_coord=maze.entry)
+        except Exception as e:
+            print(e)
+    except KeyboardInterrupt: 
         print("\033[?1049l\033[7h\033[?25h\n\nAnimation stopped by user. \
                Exiting gracefully.")
