@@ -3,7 +3,6 @@ Data structures and configuration models for the Maze Generator.
 Contains the Pydantic configuration validation, the grid Cell representation,
 and enumerated colors.
 """
-
 from pydantic import BaseModel, Field, model_validator
 from typing import Tuple
 from dataclasses import dataclass
