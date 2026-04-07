@@ -3,10 +3,10 @@ Data structures and configuration models for the Maze Generator.
 Contains the Pydantic configuration validation, the grid Cell representation,
 and enumerated colors.
 """
+from .pallete import Themes
 from pydantic import BaseModel, Field, model_validator
 from typing import Tuple
 from dataclasses import dataclass
-from enum import Enum
 import os
 
 
@@ -21,18 +21,34 @@ class MazeConfig(BaseModel):
         perfect (bool): Determines if the generated maze should be a "perfect"
             maze (having exactly one path between any two points and no loops).
     """
-
     width: int = Field(..., gt=0, description="width must be > 0")
     height: int = Field(..., gt=0, description="height must be > 0")
     entry: Tuple[int, int]
     exit: Tuple[int, int]
     output_file: str
     perfect: bool = Field(default=True)
+    theme: Themes = Field(default=Themes.NORMINETTE)
 
     @classmethod
     def parser_file(cls, file_name: str) -> "MazeConfig":
-        """Reads a text file, parses the variables, and returns a
-        validated MazeConfig object."""
+        """
+        Reads a configuration text file, parses the variables,
+        and returns a validated MazeConfig object.
+        The file should contain key-value pairs separated by '='.
+        Lines starting with '#' or empty lines are ignored.
+        The 'entry' and 'exit' keys are specifically parsed from
+        comma-separated strings into tuples of integers.
+        Args:
+            file_name (str): The path to the configuration text file.
+        Returns:
+            MazeConfig: An initialized and validated instance of the
+            maze configuration.
+        Raises:
+            FileNotFoundError: If the specified file path does not exist.
+            Exception: If a duplicate configuration key is found in the file.
+            ValueError: If 'entry' or 'exit' coordinates cannot be
+            parsed as integers.
+        """
         if not os.path.exists(file_name):
             raise FileNotFoundError
 
@@ -53,14 +69,31 @@ class MazeConfig(BaseModel):
                         coords = value.split(",")
                         config_data[key] = (int(coords[0].strip()),
                                             int(coords[1].strip()))
+                    elif key == "theme":
+                        try:
+                            config_data[key] = Themes[value.upper()]
+                        except KeyError:
+                            print(f"\033[33mWarning: Theme '{value}' not \
+found. Defaulting to NORMINETTE.\033[0m")
+                            config_data[key] = Themes.NORMINETTE
                     else:
                         config_data[key] = value
         return cls(**config_data)
 
     @model_validator(mode="after")
     def validate_terminal(self) -> "MazeConfig":
-        """Ensures the requested maze size can physically
-        fit in the current terminal window."""
+        """
+        Ensures the requested maze dimensions can physically fit within
+        the current terminal window. Calculates the maximum possible maze
+        width and height based on the active terminal's columns and lines,
+        accounting for UI padding/borders. If the terminal size cannot be
+        determined by the OS, it defaults to a safe fallback of 130x40.
+        Returns:
+            MazeConfig: The current validated instance.
+        Raises:
+            ValueError: If the configured maze width or height exceeds the
+            terminal's capacity.
+        """
         try:
             term_col, term_lines = os.get_terminal_size()
         except OSError:
@@ -82,6 +115,19 @@ a maximum of {max_maze_w}x{max_maze_h}."
 
     @model_validator(mode='after')
     def validate_entry_exit(self) -> 'MazeConfig':
+        """
+        Validates that the maze's entry and exit coordinates fall strictly
+        within the grid boundaries.
+        Checks the (x, y) coordinate tuples for both the 'entry' and 'exit'
+        points to ensure they are >= 0 and strictly less than the
+        maze's configured width
+        and height.
+        Returns:
+            MazeConfig: The current validated instance.
+        Raises:
+            ValueError: If either the entry or exit coordinates are
+            mapped outside the grid dimensions.
+        """
         if self.width and self.height and self.entry and self.exit:
             if not (0 <= self.entry[0] < self.width
                     and 0 <= self.entry[1] < self.height):
@@ -113,8 +159,11 @@ class Cell:
     y_value: int
     value: int = 15
     is_fortytwo: bool = False
+    is_entry = False
+    is_exit = False
 
-    def get_render_strings(self, dust: str = "  ") -> Tuple[str, str]:
+    def get_render_strings(self, active_theme: Themes,
+                           dust: str = "  ") -> Tuple[str, str]:
         """
         Calculates the ASCII color strings required to draw this specific
         cell in the terminal.
@@ -130,23 +179,29 @@ class Cell:
             top row of the cell, and the formatted ANSI string
             for the middle row.
         """
-        wall_bg = "\033[42m" if self.is_fortytwo else "\033[100m"
-        dust_color = f"\033[96m{dust}\033[0m" if dust != "  " else "  "
+        wall_color = active_theme.get_color("walls")
+        logo_color = active_theme.get_color("logo")
+        path_color = active_theme.get_color("path")
+        entry_color = active_theme.get_color("entry")
+        exit_color = active_theme.get_color("exit")
         reset = "\033[0m"
+
+        wall_bg = logo_color if self.is_fortytwo else wall_color
+        empty_path = f"{path_color}{dust}{reset}"
+    # 2. The Center Symbol (ONLY used in the dead center of the cell)
+        if self.is_entry:
+            # Using 2-character symbols to perfectly center them in the 2-char block!
+            symbol = f"{entry_color}▓▓" if dust == "  " else dust
+        elif self.is_exit:
+            symbol = f"{exit_color}▓▓" if dust == "  " else dust
+        else:
+            symbol = dust
+            
+        center_display = f"{path_color}{symbol}{reset}"
         corner = f"{wall_bg}  {reset}"
-        north = f"{wall_bg}  {reset}" if (self.value & 1) else dust_color
-        west = f"{wall_bg}  {reset}" if (self.value & 8) else dust_color
-        center = f"{wall_bg}  {reset}" if self.value == 15 else dust_color
+        north = f"{wall_bg}  {reset}" if (self.value & 1) else empty_path
+        west = f"{wall_bg}  {reset}" if (self.value & 8) else empty_path
+        center = f"{wall_bg}  {reset}" if self.value == 15 else center_display
         top = f"{corner}{north}"
         mid = f"{west}{center}"
         return top, mid
-
-
-class ColorsMaze(Enum):
-    """
-    Enumeration of standard ANSI terminal colors used in the maze
-    rendering engine.
-    (Reserved for future color palette abstraction).
-    """
-
-    pass

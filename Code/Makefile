@@ -4,4 +4,4 @@
 all: run
 
 run:
-	gnome-terminal --window --full-screen -- bash -c "python3  a_maze_ing.py; exec bash"
+	gnome-terminal --window --maximize -- bash -c "python3  a_maze_ing.py; exec bash"
