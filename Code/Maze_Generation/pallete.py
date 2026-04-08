@@ -3,7 +3,7 @@ from enum import Enum
 
 class ColorsMaze(Enum):
     """
-    Enumeration of standard ANSI terminal BACKGROUND colors used in the 
+    Enumeration of standard ANSI terminal BACKGROUND colors used in the
     maze rendering engine.
     """
     # Standard Background Colors (40-47)

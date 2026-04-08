@@ -37,7 +37,7 @@ class Viewport:
             term_col, term_lines = 130, 40
 
         # 1. Calculate Ideal Box Size
-        target_box_w = (requested_maze_w * 4) + 6
+        target_box_w = (requested_maze_w * 4) + 2
         target_box_h = (requested_maze_h * 2) + 1
 
         # 2. Apply Terminal Limits
@@ -50,7 +50,7 @@ class Viewport:
 
         # 4. Center the Box on the Screen
         self.offset_x = max(1, (term_col - self.width) // 2)
-        self.offset_y = max(1, (term_lines - self.height) // 3)
+        self.offset_y = max(3, (term_lines - self.height) // 3)
 
         # 5. Tell the maze what its maximum allowed size is
         self.max_maze_w = (self.width - 6) // 4

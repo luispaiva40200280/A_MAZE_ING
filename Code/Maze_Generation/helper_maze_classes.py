@@ -190,13 +190,14 @@ class Cell:
         empty_path = f"{path_color}{dust}{reset}"
     # 2. The Center Symbol (ONLY used in the dead center of the cell)
         if self.is_entry:
-            # Using 2-character symbols to perfectly center them in the 2-char block!
+            # Using 2-character symbols to perfectly center them in the 2-char
+            # block!
             symbol = f"{entry_color}▓▓" if dust == "  " else dust
         elif self.is_exit:
             symbol = f"{exit_color}▓▓" if dust == "  " else dust
         else:
             symbol = dust
-            
+
         center_display = f"{path_color}{symbol}{reset}"
         corner = f"{wall_bg}  {reset}"
         north = f"{wall_bg}  {reset}" if (self.value & 1) else empty_path

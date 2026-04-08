@@ -106,7 +106,6 @@ class MazeGenerator:
         os.system("cls" if os.name == "nt" else "clear")
         print("\033[?1049h\033[2J\033[?25l", end="")
         self.viewport.draw()
-
         # 1. Extract the active theme colors
         wall_color = self.active_theme.get_color("walls")
         logo_color = self.active_theme.get_color("logo")
@@ -186,6 +185,7 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
         """
         self.carve_42_pattern()
         self.draw_ascii_grid()
+        self.draw_stats_hdu()
         prims_algorithm(
             grid=self.grid,
             width=self.width,
@@ -201,3 +201,18 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
               end="", flush=True)
         input()
         print("\033[?1049l\033[?25h", end="")
+
+    def draw_stats_hdu(self) -> None:
+        """
+        """
+        hud_y = self.viewport.offset_y - 1
+        theme_name = self.active_theme.name
+        hud_text = (
+            f"\033[1;90m[\033[0m "
+            f"\033[1;97mSize: \033[92m{self.width}x{self.height}\033[0m | "
+            f"\033[1;97mAlgo: \033[92mPrim's\033[0m | "
+            f"\033[1;97mTheme: \033[92m{theme_name}\033[0m "
+            f"\033[1;90m]\033[0m"
+        )
+        # Print the HUD perfectly aligned with the left edge of the maze
+        print(f"\033[{hud_y};{self.viewport.offset_x}H\033[K{hud_text}", end="", flush=True)
