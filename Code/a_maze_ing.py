@@ -1,30 +1,12 @@
 import time
 import sys
 import os
-import tty
-import termios
+from Maze_Generation.menu_controller import Controller
 from Maze_Generation.helper_maze_classes import MazeConfig
 from Maze_Generation.maze_generator import MazeGenerator
 from pydantic import ValidationError
 
 FOLDER = 'Configs'
-
-
-def get_keypress() -> str:
-    """Reads a single keypress from the 
-    terminal without requiring Enter.
-    """
-    fd = sys.stdin.fileno()
-    sett = termios.tcgetattr(fd)
-    try:
-        # setcbreak allows us to read keys instantly,
-        # but still lets Ctrl+C kill the program if
-        # it gets stuck
-        tty.setcbreak(fd)
-        charcter = sys.stdin.read(1)
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, sett)
-    return charcter
 
 
 if __name__ == "__main__":
@@ -55,3 +37,6 @@ invalid data:\033[0m")
                             else "General")
             reason = error.get("msg")
             print(f"\033[93m ╰─▶ '{failed_field}': {reason}\033[0m")
+    finally:
+        menu = Controller(maze)
+        menu.run()

@@ -104,7 +104,7 @@ class MazeGenerator:
         using the active Theme colors.
         """
         os.system("cls" if os.name == "nt" else "clear")
-        print("\033[?1049h\033[2J\033[?25l", end="")
+        print("\033[2J\033[?25l", end="")
         self.viewport.draw()
         # 1. Extract the active theme colors
         wall_color = self.active_theme.get_color("walls")
@@ -194,13 +194,6 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
             protected=self.protected_cells,
             on_step=self.animated_frame,
         )
-        end_y = self.viewport.offset_y + self.viewport.height
-        msg = ("\033[92m ╰─▶ Generation Complete! Press \
-[ENTER] to exit...\033[0m")
-        print(f"\033[{end_y};{self.viewport.offset_x}H{msg}",
-              end="", flush=True)
-        input()
-        print("\033[?1049l\033[?25h", end="")
 
     def draw_stats_hdu(self) -> None:
         """
@@ -214,5 +207,12 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
             f"\033[1;97mTheme: \033[92m{theme_name}\033[0m "
             f"\033[1;90m]\033[0m"
         )
+
         # Print the HUD perfectly aligned with the left edge of the maze
-        print(f"\033[{hud_y};{self.viewport.offset_x}H\033[K{hud_text}", end="", flush=True)
+        print(f"\033[{hud_y};{self.viewport.offset_x}H\033[K{hud_text}",
+              end="", flush=True)
+
+    def reset_grid(self) -> None:
+        for row in self.grid:
+            for cell in row:
+                cell.value = 15
