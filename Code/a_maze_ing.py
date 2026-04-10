@@ -29,14 +29,13 @@ directory or the {FOLDER}/ folder!\033[0m")
         maze_config = MazeConfig.parser_file(FINAL_PATH)
         maze = MazeGenerator(maze_config)
         maze.generate_maze(starr_coord=maze_config.entry)
+        menu = Controller(maze)
+        menu.run()
     except ValidationError as e:
         print("\n\033[91m[Configuration Error] Your config.txt file has \
 invalid data:\033[0m")
         for error in e.errors():
-            failed_field = (error.get("loc")[0] if error.get("loc")
+            failed_field = (error.get("loc", ())[0] if error.get("loc")
                             else "General")
             reason = error.get("msg")
             print(f"\033[93m ╰─▶ '{failed_field}': {reason}\033[0m")
-    finally:
-        menu = Controller(maze)
-        menu.run()

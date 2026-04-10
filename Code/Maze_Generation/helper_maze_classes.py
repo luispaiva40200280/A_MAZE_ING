@@ -5,7 +5,7 @@ and enumerated colors.
 """
 from .pallete import Themes
 from pydantic import BaseModel, Field, model_validator
-from typing import Tuple
+from typing import Tuple, Any, Dict
 from dataclasses import dataclass
 import os
 
@@ -52,7 +52,7 @@ class MazeConfig(BaseModel):
         if not os.path.exists(file_name):
             raise FileNotFoundError
 
-        config_data = {}
+        config_data: Dict[str, Any] = {}
         with open(file_name, "r") as file:
             for line in file:
                 line = line.strip()

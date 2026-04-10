@@ -1,0 +1,8 @@
+# --- Core Application Dependencies ---
+# Used for parsing and validating config.txt
+pydantic>=2.0.0
+
+# --- Development & Linting Tools ---
+# Required by your Makefile 'lint' rules
+flake8>=6.0.0
+mypy>=1.0.0

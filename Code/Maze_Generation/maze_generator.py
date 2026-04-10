@@ -185,7 +185,7 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
         """
         self.carve_42_pattern()
         self.draw_ascii_grid()
-        self.draw_stats_hdu()
+        self.draw_stats_hud()
         prims_algorithm(
             grid=self.grid,
             width=self.width,
@@ -195,8 +195,16 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
             on_step=self.animated_frame,
         )
 
-    def draw_stats_hdu(self) -> None:
+    def draw_stats_hud(self) -> None:
         """
+        Renders a real-time statistics Heads-Up Display (HUD) above the maze.
+        Constructs an ANSI color-coded string displaying the current maze
+        dimensions, the active pathfinding algorithm (Prim's), and the
+        currently selected theme. It dynamically calculates the correct
+        terminal coordinates to print this information exactly one row
+        above the top-left corner of the Viewport.
+        Returns:
+            None
         """
         hud_y = self.viewport.offset_y - 1
         theme_name = self.active_theme.name
@@ -213,6 +221,11 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
               end="", flush=True)
 
     def reset_grid(self) -> None:
+        """
+        Only resets the value of each cell in the grid so it
+        becomes a new complete grid so its possible to crate
+        a completly new maze after the grid is generate
+        """
         for row in self.grid:
             for cell in row:
                 cell.value = 15
