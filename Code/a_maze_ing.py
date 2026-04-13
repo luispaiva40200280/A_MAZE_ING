@@ -4,6 +4,7 @@ import os
 from Maze_Generation.menu_controller import Controller
 from Maze_Generation.helper_maze_classes import MazeConfig
 from Maze_Generation.maze_generator import MazeGenerator
+from Maze_Generation.maze_sotore import MazeDataBase
 from pydantic import ValidationError
 
 FOLDER = 'Configs'
@@ -32,6 +33,10 @@ directory or the {FOLDER}/ folder!\033[0m")
         menu = Controller(maze)
         # runing the maze itself
         maze.generate_maze(starr_coord=maze_config.entry)
+        # START OF STORING THE MAZE GENERATED IN maze.txt
+        datbase = MazeDataBase(maze=maze)
+        datbase.export_maze_txt(maze.grid)
+
         menu.run()
     except ValidationError as e:
         print("\n\033[91m[Configuration Error] Your config.txt file has \

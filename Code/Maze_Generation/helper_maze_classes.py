@@ -5,7 +5,7 @@ and enumerated colors.
 """
 from .pallete import Themes
 from pydantic import BaseModel, Field, model_validator
-from typing import Tuple, Any, Dict
+from typing import Tuple, Any, Dict, Optional
 from dataclasses import dataclass
 import os
 
@@ -28,6 +28,7 @@ class MazeConfig(BaseModel):
     output_file: str
     perfect: bool
     theme: Themes = Field(default=Themes.NORMINETTE)
+    seed: Optional[Any] = Field(default=None)
 
     @classmethod
     def parser_file(cls, file_name: str) -> "MazeConfig":

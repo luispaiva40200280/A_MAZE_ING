@@ -23,6 +23,7 @@ def prims_algorithm(
     start_coord: Tuple[int, int],
     protected: Set[Tuple[int, int]] | None = None,
     on_step: Callable[[Any, Any], None] | None = None,
+    rng: Any = None
 ) -> None:
     """
     Executes Randomized Prim's Algorithm to carve a maze into the provided
@@ -50,7 +51,7 @@ def prims_algorithm(
     """
     if protected is None:
         protected = set()
-
+    rng = rng or random
     in_maze: Set[Tuple[int, int]] = set()
     frontier: List[Tuple[int, int]] = []
 
@@ -78,7 +79,7 @@ def prims_algorithm(
     add_to_frontier(start_x, start_y)
 
     while frontier:
-        idx = random.randint(0, len(frontier) - 1)
+        idx = rng.randint(0, len(frontier) - 1)
         fx, fy = frontier.pop(idx)
         maze_neighbors = []
 
@@ -91,7 +92,7 @@ def prims_algorithm(
                     maze_neighbors.append((nx, ny, bit, opp))
 
         if maze_neighbors:
-            nx, ny, bit, opp = random.choice(maze_neighbors)
+            nx, ny, bit, opp = rng.choice(maze_neighbors)
 
             # Modify the .value property of the Cell objects
             grid[fy][fx].value &= ~bit

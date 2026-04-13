@@ -10,6 +10,8 @@ from typing import Tuple, List, Set
 import os
 import sys
 import time
+from datetime import datetime
+import random
 
 """bitmap for 42"""
 PATTERN = ["101 111",
@@ -57,6 +59,10 @@ class MazeGenerator:
         self.active_theme: Themes = maze_config.theme
         self.grid[self.entry[1]][self.entry[0]].is_entry = True
         self.grid[self.exit[1]][self.exit[0]].is_exit = True
+        self.seed = (maze_config.seed if maze_config.seed
+                     else random.randint(0, 9999))
+        self.rgn = random.Random(self.seed)
+        self.date = datetime.now()
 
     def calculate_offsets(self) -> None:
         """
@@ -171,10 +177,7 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
                 print(f"\033[{cy};{cx}H{top}", end="")
                 print(f"\033[{cy + 1};{cx}H{middle}", end="")
             sys.stdout.flush()
-            if self.height < 12 and self.width < 10:
-                time.sleep(0.08)
-            else:
-                time.sleep(0.01)
+            time.sleep(0.004)
 
     def generate_maze(self, starr_coord: Tuple[int, int]) -> None:
         """
@@ -206,6 +209,7 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
                 start_coord=starr_coord,
                 protected=self.protected_cells,
                 on_step=self.animated_frame,
+                rng=self.rgn
             )
         finally:
             # 4. ALWAYS restore settings, even if the algorithm crashes
@@ -228,7 +232,9 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
             f"\033[1;90m[\033[0m "
             f"\033[1;97mSize: \033[92m{self.width}x{self.height}\033[0m | "
             f"\033[1;97mAlgo: \033[92mPrim's\033[0m | "
-            f"\033[1;97mTheme: \033[92m{theme_name}\033[0m "
+            f"\033[1;97mTheme: \033[92m{theme_name}\033[0m | "
+            f"\033[1;97mDate: \033[92m{self.date}\033[0m | "
+            f"\033[1;97mSEED: \033[92m{self.seed}\033[0m"
             f"\033[1;90m]\033[0m"
         )
 
@@ -245,3 +251,6 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
         for row in self.grid:
             for cell in row:
                 cell.value = 15
+        self.seed = random.randint(0, 9999)
+        self.rgn = random.Random(self.seed)
+        self.date = datetime.now()

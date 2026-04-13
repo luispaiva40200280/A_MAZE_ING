@@ -35,14 +35,18 @@ debug: install
 	@$(PY) -m pdb $(SCRIPT) $(CONFIG)
 
 clean:
-	@echo "Cleaning all project cache files..."
-	@find . -type d -name "__pycache__" -exec rm -rf {} +
-# 2. Deletes lingering compiled python files
 	@find . -type f -name "*.pyc" -delete
 	@find . -type f -name "*.pyo" -delete
-	@# 3. Removes Mypy and other linter cache folders
-	@rm -rf .mypy_cache .pytest_cache
-	@echo "Project directory is clean!" 
+	@echo "Cleaning all project cache files..."
+# 1. Finds and deletes all __pycache__ folders anywhere
+	@find . -type d -name "__pycache__" -exec rm -rf {} +
+# 2. Deletes lingering compiled python files anywhere
+	@find . -type f -name "*.pyc" -delete
+	@find . -type f -name "*.pyo" -delete
+# 3. Recursively removes Mypy and Pytest cache folders anywhere
+	@find . -type d -name ".mypy_cache" -exec rm -rf {} +
+	@find . -type d -name ".pytest_cache" -exec rm -rf {} +
+	@echo "Project directory is completely clean!"
 
 lint: install
 	@echo "Running lint flake8..."

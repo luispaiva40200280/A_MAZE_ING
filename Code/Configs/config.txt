@@ -1,14 +1,14 @@
 # --- Mandatory configuration part
-WIDTH=17
-HEIGHT=17
+WIDTH=33
+HEIGHT=18
 ENTRY=0,0
-EXIT=16,5
+EXIT=16,2
 OUTPUT_FILE=maze.txt
 PERFECT=true
 
 # --- ADDITIONAL KEYS
-theme=HACKER
-SEED=Null
+#theme=HACKER
+#SEED=42
 #ALGORITHM=
 #DISPLAY=MODE
 

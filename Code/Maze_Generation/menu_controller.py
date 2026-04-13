@@ -1,7 +1,7 @@
 import sys
 from .maze_generator import MazeGenerator
 from .pallete import Themes
-
+from .maze_sotore import MazeDataBase
 LIST_THEMES = list(Themes)
 
 
@@ -76,6 +76,7 @@ class Controller:
     def generate_new_maze(self) -> None:
         self.maze.reset_grid()
         self.maze.generate_maze(self.maze.entry)
+        MazeDataBase(maze=self.maze).export_maze_txt(self.maze.grid)
 
     def run(self) -> None:
         self.maze.carve_42_pattern()
