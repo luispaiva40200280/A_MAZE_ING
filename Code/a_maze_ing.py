@@ -26,10 +26,12 @@ directory or the {FOLDER}/ folder!\033[0m")
     try:
         print("Initializing Maze Generator...")
         time.sleep(0.01)
+        # Difining the variables of my maze and the menu
         maze_config = MazeConfig.parser_file(FINAL_PATH)
         maze = MazeGenerator(maze_config)
-        maze.generate_maze(starr_coord=maze_config.entry)
         menu = Controller(maze)
+        # runing the maze itself
+        maze.generate_maze(starr_coord=maze_config.entry)
         menu.run()
     except ValidationError as e:
         print("\n\033[91m[Configuration Error] Your config.txt file has \
@@ -39,3 +41,12 @@ invalid data:\033[0m")
                             else "General")
             reason = error.get("msg")
             print(f"\033[93m ╰─▶ '{failed_field}': {reason}\033[0m")
+        time.sleep(2)
+    except KeyboardInterrupt:
+        # If they press Ctrl+C ANYWHERE, Python jumps straight here!
+        menu.clean_screen()
+        time.sleep(2)
+        sys.exit(0)
+    except ValueError as e:
+        print(f"\033[93m Error': {e}\033[0m")
+        time.sleep(2)

@@ -42,7 +42,7 @@ class Themes(Enum):
         "logo": ColorsMaze.BG_BRIGHT_MAGENTA,
         "walls": ColorsMaze.BG_BLACK,
         "path": ColorsMaze.BG_BLUE,
-        "entry": ColorsMaze.TXT_BOLD_CYAN,
+        "entry": ColorsMaze.TXT_BOLD_YELLOW,
         "exit": ColorsMaze.TXT_BOLD_PINK
     }
     INFERNO = {
@@ -55,9 +55,23 @@ class Themes(Enum):
     NORMINETTE = {
         "logo": ColorsMaze.BG_BRIGHT_GREEN,
         "walls": ColorsMaze.BG_BLACK,
-        "path": ColorsMaze.BG_BRIGHT_BLACK,
+        "path": ColorsMaze.BG_BRIGHT_WHITE,
         "entry": ColorsMaze.TXT_BOLD_PINK,
         "exit": ColorsMaze.TXT_BOLD_RED
+    }
+    HACKER = {
+        "logo": ColorsMaze.BG_WHITE,
+        "walls": ColorsMaze.BG_BLUE,
+        "path": ColorsMaze.BG_BLACK,
+        "entry": ColorsMaze.TXT_BOLD_GREEN,
+        "exit": ColorsMaze.TXT_BOLD_WHITE
+    }
+    FOREST = {
+        "logo": ColorsMaze.BG_BRIGHT_RED,
+        "walls": ColorsMaze.BG_GREEN,
+        "path": ColorsMaze.BG_BLACK,
+        "entry": ColorsMaze.TXT_BOLD_YELLOW,
+        "exit": ColorsMaze.TXT_BOLD_CYAN
     }
 
     def get_color(self, component: str) -> str:

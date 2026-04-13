@@ -26,7 +26,7 @@ class MazeConfig(BaseModel):
     entry: Tuple[int, int]
     exit: Tuple[int, int]
     output_file: str
-    perfect: bool = Field(default=True)
+    perfect: bool
     theme: Themes = Field(default=Themes.NORMINETTE)
 
     @classmethod
@@ -64,7 +64,7 @@ class MazeConfig(BaseModel):
                     key = key.strip().lower()
                     value = value.strip()
                     if key in config_data:
-                        raise Exception(f"Duplicated values in conf: {key}")
+                        raise ValueError(f"Duplicated values in conf: {key}")
                     elif key in ["entry", "exit"]:
                         coords = value.split(",")
                         config_data[key] = (int(coords[0].strip()),
@@ -137,6 +137,41 @@ a maximum of {max_maze_w}x{max_maze_h}."
                     and 0 <= self.exit[1] < self.height):
                 raise ValueError(f"Exit {self.exit} is outside the bounds of\
 {self.width}x{self.height}!")
+        return self
+
+    @model_validator(mode='after')
+    def validate_pattern_exit_entry(self) -> 'MazeConfig':
+        """
+        Validates that the maze entry and exit coordinates
+        do not collide with the internal '42' logo pattern.
+        Dynamically reads a binary bitmap pattern and centers it within the
+        maze grid. Calculates the absolute (x, y) coordinates for all solid
+        walls (characters marked as '1') and ensures the user's entry and
+        exit points do not overlap them. Empty spaces or '0's in the pattern
+        are treated as walkable ground, allowing spawn points inside the
+        hollow areas of the numbers.
+        Returns:
+            MazeConfig: The current validated instance.
+        Raises:
+            ValueError: If either the entry or exit coordinate is placed
+            exactly on top of a solid wall block within the 42 pattern.
+        """
+        from .maze_generator import PATTERN
+        w_pattern = len(PATTERN[0])
+        h_pattern = len(PATTERN)
+        start_x = (self.width // 2) - (w_pattern // 2)
+        start_y = (self.height // 2) - (h_pattern // 2)
+        forbiden = set()
+        for y, row in enumerate(PATTERN):
+            for x, char in enumerate(row):
+                if char == '1':
+                    forb_x = start_x + x
+                    forb_y = start_y + y
+                    forbiden.add((forb_x, forb_y))
+        if self.entry in forbiden:
+            raise ValueError(f"Entry coord is in the 42 Pattern: {self.entry}")
+        if self.exit in forbiden:
+            raise ValueError(f"Exit coord is in the 42 Pattern: {self.exit}")
         return self
 
 

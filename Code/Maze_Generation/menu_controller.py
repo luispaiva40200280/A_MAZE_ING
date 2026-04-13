@@ -42,7 +42,9 @@ class Controller:
         to genarate the same maze whith diferent colors
         """
         import random
-        random_theme = random.choice(LIST_THEMES)
+        chosing_themes = [t for t in LIST_THEMES
+                          if t != self.maze.active_theme]
+        random_theme = random.choice(chosing_themes)
         self.maze.active_theme = random_theme
         self.maze.draw_ascii_grid()
         self.maze.draw_stats_hud()
@@ -105,8 +107,8 @@ class Controller:
 
             for i, opt in enumerate(menu_options):
                 if i == select_indx:
-                    print(f"{self.maze.active_theme.get_color('walls')} > \
-{opt['txt']} \033[0m  ", end="")
+                    print(f"{self.maze.active_theme.get_color('logo')}\
+\033[1;30m > {opt['txt']} \033[0m  ", end="")
                 else:
                     print(f"   {opt['txt']}    ", end="")
             sys.stdout.flush()

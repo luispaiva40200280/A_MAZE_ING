@@ -171,7 +171,10 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
                 print(f"\033[{cy};{cx}H{top}", end="")
                 print(f"\033[{cy + 1};{cx}H{middle}", end="")
             sys.stdout.flush()
-            time.sleep(0.002)
+            if self.height < 12 and self.width < 10:
+                time.sleep(0.08)
+            else:
+                time.sleep(0.01)
 
     def generate_maze(self, starr_coord: Tuple[int, int]) -> None:
         """
@@ -183,17 +186,30 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
             starr_coord (Tuple[int, int]): The (x, y) coordinate
             indicating where the generation algorithm should begin digging.
         """
+        import termios
         self.carve_42_pattern()
         self.draw_ascii_grid()
         self.draw_stats_hud()
-        prims_algorithm(
-            grid=self.grid,
-            width=self.width,
-            height=self.height,
-            start_coord=starr_coord,
-            protected=self.protected_cells,
-            on_step=self.animated_frame,
-        )
+        # 1. Get current terminal settings
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            # 2. Turn off ECHO (prevents key presses from showing)
+            new_settings = termios.tcgetattr(fd)
+            new_settings[3] = new_settings[3] & ~termios.ECHO
+            termios.tcsetattr(fd, termios.TCSADRAIN, new_settings)
+            # 3. Run the animated algorithm
+            prims_algorithm(
+                grid=self.grid,
+                width=self.width,
+                height=self.height,
+                start_coord=starr_coord,
+                protected=self.protected_cells,
+                on_step=self.animated_frame,
+            )
+        finally:
+            # 4. ALWAYS restore settings, even if the algorithm crashes
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
     def draw_stats_hud(self) -> None:
         """
