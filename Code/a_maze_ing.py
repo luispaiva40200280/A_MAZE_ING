@@ -31,12 +31,11 @@ directory or the {FOLDER}/ folder!\033[0m")
         maze_config = MazeConfig.parser_file(FINAL_PATH)
         maze = MazeGenerator(maze_config)
         menu = Controller(maze)
-        # runing the maze itself
-        maze.generate_maze(starr_coord=maze_config.entry)
         # START OF STORING THE MAZE GENERATED IN maze.txt
+        # runing the maze itself
+        maze.generate_maze()
         datbase = MazeDataBase(maze=maze)
         datbase.export_maze_txt(maze.grid)
-
         menu.run()
     except ValidationError as e:
         print("\n\033[91m[Configuration Error] Your config.txt file has \

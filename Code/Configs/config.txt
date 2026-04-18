@@ -1,15 +1,17 @@
-# --- Mandatory configuration part
-WIDTH=33
+# --- Mandatory configuration part ---- #
+WIDTH=45
 HEIGHT=18
 ENTRY=0,0
-EXIT=16,2
+EXIT=44,17
 OUTPUT_FILE=maze.txt
-PERFECT=true
+PERFECT=false
 
 # --- ADDITIONAL KEYS
-#theme=HACKER
-#SEED=42
-#ALGORITHM=
-#DISPLAY=MODE
+THEME=INFERNO
+SEED=PORTO
+DECOUPLE_ENTRY=true
+ALGORITHM=bfs
 
-
+#--- DONT CHANGE ANY OF THIS LINES
+#Algo ==> "PRIMS", "HUNT_KILL"
+#

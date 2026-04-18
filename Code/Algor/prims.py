@@ -7,17 +7,11 @@ walls to break down.
 """
 import random
 from typing import List, Tuple, Set, Callable, Any
-
-DIRECTIONS = [
-    (0, -1, 1, 4),  # North 0001
-    (1, 0, 2, 8),  # East
-    (0, 1, 4, 1),  # South
-    (-1, 0, 8, 2),  # West
-]
+from Maze_Generation.helper_maze_classes import Cell
 
 
 def prims_algorithm(
-    grid: List[List[Any]],
+    grid: List[List[Cell]],
     width: int,
     height: int,
     start_coord: Tuple[int, int],
@@ -25,6 +19,7 @@ def prims_algorithm(
     on_step: Callable[[Any, Any], None] | None = None,
     rng: Any = None
 ) -> None:
+    from . import DIRECTIONS
     """
     Executes Randomized Prim's Algorithm to carve a maze into the provided
     grid.The algorithm works by maintaining a "frontier" of cells adjacent

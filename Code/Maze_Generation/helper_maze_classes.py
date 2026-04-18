@@ -3,6 +3,7 @@ Data structures and configuration models for the Maze Generator.
 Contains the Pydantic configuration validation, the grid Cell representation,
 and enumerated colors.
 """
+from . import supress_terminal_echos
 from .pallete import Themes
 from pydantic import BaseModel, Field, model_validator
 from typing import Tuple, Any, Dict, Optional
@@ -27,8 +28,10 @@ class MazeConfig(BaseModel):
     exit: Tuple[int, int]
     output_file: str
     perfect: bool
+    algorithm: str = Field(default="PRIMS")
     theme: Themes = Field(default=Themes.NORMINETTE)
     seed: Optional[Any] = Field(default=None)
+    decouple_entry: bool = Field(default=True)
 
     @classmethod
     def parser_file(cls, file_name: str) -> "MazeConfig":
@@ -50,11 +53,20 @@ class MazeConfig(BaseModel):
             ValueError: If 'entry' or 'exit' coordinates cannot be
             parsed as integers.
         """
-        if not os.path.exists(file_name):
+        import time
+        from Algor.all_algo import ALGORITHM_REGISTRY
+        FOLDER = 'Configs'
+        if os.path.exists(file_name):
+            FINAL_PATH = file_name
+        elif os.path.exists(os.path.join(FOLDER, file_name)):
+            FINAL_PATH = os.path.join(FOLDER, file_name)
+        else:
+            print(f"\033[93mFile '{file_name}' was not found in the root \
+directory or the {FOLDER}/ folder!\033[0m")
+        if not os.path.exists(FINAL_PATH):
             raise FileNotFoundError
-
         config_data: Dict[str, Any] = {}
-        with open(file_name, "r") as file:
+        with open(FINAL_PATH, "r") as file:
             for line in file:
                 line = line.strip()
                 if not line or line.startswith("#"):
@@ -76,7 +88,25 @@ class MazeConfig(BaseModel):
                         except KeyError:
                             print(f"\033[33mWarning: Theme '{value}' not \
 found. Defaulting to NORMINETTE.\033[0m")
+                            time.sleep(3)
                             config_data[key] = Themes.NORMINETTE
+                    elif key == "algorithm":
+                        algo_str = value.upper()
+                        try:
+                            algo = ALGORITHM_REGISTRY[algo_str]
+                            if algo.job != "construct":
+                                raise ValueError(f"{algo_str} is not used to \
+create mazes but to solve")
+                            config_data[key] = algo_str
+                        except KeyError as e:
+                            print(f"\033[33mWarning: {e} doesnt exist: \
+Using prims algorithm\033[0m")
+                            time.sleep(3)
+                            config_data[key] = 'PRIMS'
+                        except ValueError as e:
+                            print(f"\033[33m{e} Using prims algorithm\033[0m")
+                            time.sleep(3)
+                            config_data[key] = 'PRIMS'
                     else:
                         config_data[key] = value
         return cls(**config_data)
@@ -198,6 +228,7 @@ class Cell:
     is_entry = False
     is_exit = False
 
+    @supress_terminal_echos
     def get_render_strings(self, active_theme: Themes,
                            dust: str = "  ") -> Tuple[str, str]:
         """

@@ -25,7 +25,7 @@ $(MARKER): $(REQ)
 	@touch $(MARKER)
  
 		
-run: install
+run: install lint
 	@echo "Start A_MAZE_ING in a virtual env..."
 # open a new window and run the Maze_Generation
 	@gnome-terminal --window --maximize -- bash -c "$(PY) $(SCRIPT) $(CONFIG);"

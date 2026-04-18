@@ -22,7 +22,7 @@ class MazeDataBase:
             exit_x, exit_y = self.maze.exit
             file.write(f"\n{entry_x},{entry_y}\n")
             file.write(f"{exit_x},{exit_y}\n")
-            file.write("\nSORT PATH PLACE HOLDER")
+            file.write(f"\n{self.maze.path}")
 
     def export_maze_json(self) -> None:
         pass

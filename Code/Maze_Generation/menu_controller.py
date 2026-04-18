@@ -2,6 +2,8 @@ import sys
 from .maze_generator import MazeGenerator
 from .pallete import Themes
 from .maze_sotore import MazeDataBase
+from .import supress_terminal_echos
+
 LIST_THEMES = list(Themes)
 
 
@@ -35,6 +37,7 @@ class Controller:
             termios.tcsetattr(fd, termios.TCSADRAIN, sett)
         return charcter
 
+    @supress_terminal_echos
     def get_random_theme(self) -> None:
         """
         Just gets a new random theme of my themes list
@@ -48,6 +51,8 @@ class Controller:
         self.maze.active_theme = random_theme
         self.maze.draw_ascii_grid()
         self.maze.draw_stats_hud()
+        if self.maze.solved:
+            self.maze.show_solve_path()
 
     def clean_screen(self) -> None:
         from os import system, name
@@ -73,11 +78,23 @@ class Controller:
         print(f"\033[{center_y};{center_x}H\033[92m{msg}\033[0m\n\n")
         time.sleep(0.70)
 
+    @supress_terminal_echos
     def generate_new_maze(self) -> None:
         self.maze.reset_grid()
-        self.maze.generate_maze(self.maze.entry)
+        self.maze.generate_maze()
         MazeDataBase(maze=self.maze).export_maze_txt(self.maze.grid)
 
+    def change_alorithm(self) -> None:
+        from Algor.all_algo import ALGORITHM_REGISTRY
+        available_algos = [
+            key for key, meta in ALGORITHM_REGISTRY.items()
+            if key != self.maze.algo_name and meta.job == "construct"
+        ]
+        if available_algos:
+            self.maze.algo_name = available_algos[0]
+        self.generate_new_maze()
+
+    @supress_terminal_echos
     def run(self) -> None:
         self.maze.carve_42_pattern()
         self.maze.draw_ascii_grid()
@@ -89,14 +106,18 @@ class Controller:
             },
             {
                 'txt': "2: Toggle Path",
-                'func': lambda: print('show the shortes path')
+                'func': lambda: self.maze.toogle_solve_path()
             },
             {
                 'txt': "3: Change Theme",
                 'func': lambda: self.get_random_theme()
             },
             {
-                'txt': "4: Exit",
+                'txt': "4: Change Algorithm",
+                'func': lambda: self.change_alorithm()
+            },
+            {
+                'txt': "5: Exit",
                 'func': lambda: self.clean_screen()
             }
         ]
@@ -123,9 +144,11 @@ class Controller:
                     select_indx = 2
                 case '4':
                     select_indx = 3
+                case '5':
+                    select_indx = 4
                 case ('\r' | '\n'):
                     action = menu_options[select_indx]['func']
                     if callable(action):
                         action()
-                    if select_indx == 3:
+                    if menu_options[select_indx]['txt'] == '5: Exit':
                         break

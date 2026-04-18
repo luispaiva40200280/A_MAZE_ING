@@ -3,10 +3,11 @@ Combines configuration, UI scaling, matrix construction,
 and rendering animation into a single responsive terminal
 application.
 """
-from Algor.prims import prims_algorithm
+from Algor.all_algo import ALGORITHM_REGISTRY
+from . import supress_terminal_echos
 from .viewport import Viewport
 from .helper_maze_classes import Cell, MazeConfig
-from typing import Tuple, List, Set
+from typing import Tuple, List, Set, Optional, Union
 import os
 import sys
 import time
@@ -63,6 +64,11 @@ class MazeGenerator:
                      else random.randint(0, 9999))
         self.rgn = random.Random(self.seed)
         self.date = datetime.now()
+        self.path = ""
+        self.solved = False
+        self.decouple = maze_config.decouple_entry
+        self.perfect = maze_config.perfect
+        self.algo_name = maze_config.algorithm
 
     def calculate_offsets(self) -> None:
         """
@@ -179,7 +185,47 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
             sys.stdout.flush()
             time.sleep(0.004)
 
-    def generate_maze(self, starr_coord: Tuple[int, int]) -> None:
+    def _handle_imperfect_mazes(self) -> None:
+        if not self.config.perfect:
+            from Algor import DIRECTIONS
+            # Step A: Find all the "Dead Ends" in the maze
+            # In your bitmask math, dead ends have values: 7, 11, 13, 14
+            dead_ends = []
+            for y in range(1, self.height - 1):
+                for x in range(1, self.width - 1):
+                    cell = self.grid[y][x]
+                    if cell.value in (7, 11, 13, 14) and not cell.is_fortytwo:
+                        dead_ends.append(cell)
+            # Step B: Pick how many dead ends to connect
+            # (Connecting ~50% of them creates a fantastic, loopy maze)
+            loops_to_make = len(dead_ends) // 5
+            self.rgn.shuffle(dead_ends)
+            # Step C: Smash a wall to connect the dead end to a neighbor
+            for i in range(min(loops_to_make, len(dead_ends))):
+                cell1 = dead_ends[i]
+                # Look at all 4 directions to find
+                # which walls are currently SOLID
+                solid_walls = []
+                for dx, dy, bit, opp in DIRECTIONS:
+                    # If this bit is still 1, the wall is solid
+                    if (cell1.value & bit):
+                        nx, ny = cell1.x_value + dx, cell1.y_value + dy
+                        # Make sure we don't accidentally break
+                        # the absolute outer border!
+                        if (0 < nx < self.width - 1 and
+                                0 < ny < self.height - 1):
+                            cell2 = self.grid[ny][nx]
+                            if not cell2.is_fortytwo:
+                                solid_walls.append((cell2, bit, opp))
+                # Pick a random solid wall and smash it!
+                if solid_walls:
+                    cell2, bit, opp = self.rgn.choice(solid_walls)
+                    cell1.value &= ~bit
+                    cell2.value &= ~opp
+                    self.animated_frame(cell1, cell2)
+
+    @supress_terminal_echos
+    def generate_maze(self) -> None:
         """
         The main execution pipeline for the maze generator.
         Carves the pattern, renders the UI, and initiates the
@@ -189,31 +235,33 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
             starr_coord (Tuple[int, int]): The (x, y) coordinate
             indicating where the generation algorithm should begin digging.
         """
-        import termios
-        self.carve_42_pattern()
-        self.draw_ascii_grid()
-        self.draw_stats_hud()
-        # 1. Get current terminal settings
-        fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
         try:
-            # 2. Turn off ECHO (prevents key presses from showing)
-            new_settings = termios.tcgetattr(fd)
-            new_settings[3] = new_settings[3] & ~termios.ECHO
-            termios.tcsetattr(fd, termios.TCSADRAIN, new_settings)
-            # 3. Run the animated algorithm
-            prims_algorithm(
+            start_point = self.entry if self.decouple else (0, 0)
+            algorithm = ALGORITHM_REGISTRY[self.algo_name]
+            solve_maze = ALGORITHM_REGISTRY['BFS']
+            self.carve_42_pattern()
+            self.draw_ascii_grid()
+            self.draw_stats_hud()
+            algorithm.func(
                 grid=self.grid,
                 width=self.width,
                 height=self.height,
-                start_coord=starr_coord,
+                start_coord=start_point,
                 protected=self.protected_cells,
                 on_step=self.animated_frame,
                 rng=self.rgn
             )
-        finally:
-            # 4. ALWAYS restore settings, even if the algorithm crashes
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+            self.path = solve_maze.func(
+                grid=self.grid,
+                width=self.width,
+                height=self.height,
+                entry=self.entry,
+                exit=self.exit
+            )
+            if not self.perfect:
+                self._handle_imperfect_mazes()
+        except Exception as e:
+            print(e)
 
     def draw_stats_hud(self) -> None:
         """
@@ -228,14 +276,17 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
         """
         hud_y = self.viewport.offset_y - 1
         theme_name = self.active_theme.name
+        algo = ALGORITHM_REGISTRY[self.algo_name]
         hud_text = (
             f"\033[1;90m[\033[0m "
             f"\033[1;97mSize: \033[92m{self.width}x{self.height}\033[0m | "
-            f"\033[1;97mAlgo: \033[92mPrim's\033[0m | "
+            f"\033[1;97mAlgo: \033[92m{algo.name}\033[0m | "
             f"\033[1;97mTheme: \033[92m{theme_name}\033[0m | "
             f"\033[1;97mDate: \033[92m{self.date}\033[0m | "
-            f"\033[1;97mSEED: \033[92m{self.seed}\033[0m"
-            f"\033[1;90m]\033[0m"
+            f"\033[1;97mSEED: \033[92m{self.seed}\033[0m | "
+            f"\033[1;97mDECOUPLE Entry: \033[92m{self.decouple}\033[0m | "
+            f"\033[1;97mPerfect: \033[92m{self.perfect}\033[0m "
+            "\033[1;90m]\033[0m"
         )
 
         # Print the HUD perfectly aligned with the left edge of the maze
@@ -254,3 +305,69 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
         self.seed = random.randint(0, 9999)
         self.rgn = random.Random(self.seed)
         self.date = datetime.now()
+        self.solved = False
+
+    def decode_path(self) -> List[Tuple[int, int]]:
+        """
+        Translates the maze solution that is a string
+        to a list of tupples that are coord in the grid
+        of the maze
+        """
+        from . import DIRECTION_DELTAS
+        if self.path == 'UNSOLVABLE':
+            return []
+        current_x, current_y = self.entry
+        path_coord = [self.entry]
+        for letter in self.path:
+            dx, dy = DIRECTION_DELTAS[letter]
+            current_x += dx
+            current_y += dy
+            path_coord.append((current_x, current_y))
+        return path_coord
+
+    def toogle_solve_path(self) -> None:
+        if self.solved:
+            self.draw_ascii_grid()
+            self.draw_stats_hud()
+        else:
+            self.show_solve_path(value=0.03)
+        self.solved = not self.solved
+
+    @supress_terminal_echos
+    def show_solve_path(self, value: Optional[Union[int, float]] = 0) -> None:
+        path_coord = self.decode_path()
+        if not path_coord:
+            print(f"{self.active_theme.get_color('logo')}\
+[Cannot solve this maze...]\033[0m")
+            self.solved = False
+            return
+
+        PATH_CHAR = "  "
+        color_on = self.active_theme.get_color('logo')
+        color_off = self.active_theme.get_color('none')
+        # 1. Draw the very first room (The Entry)
+        curr_x, curr_y = path_coord[0]
+        cx = self.offset_x + (curr_x * 4)
+        cy = self.offset_y + (curr_y * 2)
+        time.sleep(0.05)
+        for letter, (next_x, next_y) in zip(self.path, path_coord[1:]):
+            if letter == 'E':
+                bridge_x, bridge_y = cx + 4, cy + 1
+            elif letter == 'W':
+                bridge_x, bridge_y = cx, cy + 1
+            elif letter == 'S':
+                bridge_x, bridge_y = cx + 2, cy + 2
+            elif letter == 'N':
+                bridge_x, bridge_y = cx + 2, cy
+            time.sleep(value or 0)
+            print(f"\033[{bridge_y};{bridge_x}H{color_on}\
+{PATH_CHAR}{color_off}", end="", flush=True)
+            cx = self.offset_x + (next_x * 4)
+            cy = self.offset_y + (next_y * 2)
+            time.sleep(value or 0)
+            if (next_x, next_y) != self.exit:
+                print(f"\033[{cy + 1};{cx + 2}H{color_on}\
+{PATH_CHAR}{color_off}", end="", flush=True)
+        time.sleep(0.05)
+        final_y = self.offset_y + (self.height * 2) + 2
+        print(f"\033[{final_y};0H")
