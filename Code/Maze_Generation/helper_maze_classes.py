@@ -190,6 +190,8 @@ a maximum of {max_maze_w}x{max_maze_h}."
         from .maze_generator import PATTERN
         w_pattern = len(PATTERN[0])
         h_pattern = len(PATTERN)
+        if self.width < (w_pattern + 4) or self.height < (h_pattern + 4):
+            return self
         start_x = (self.width // 2) - (w_pattern // 2)
         start_y = (self.height // 2) - (h_pattern // 2)
         forbiden = set()

@@ -1,14 +1,28 @@
+"""
+Data persistence and export handling for the Maze Generator.
+
+This module provides the `MazeDataBase` class, which is responsible for
+translating the in-memory, bitmask-based maze grid into the specific
+text format required by the project specifications.
+It handles all file I/O operations to safely save the
+generated maze structure, entry/exit coordinats and the solved path.
+"""
 from .helper_maze_classes import Cell
 from .maze_generator import MazeGenerator
 from dataclasses import dataclass
 from typing import List
-# import json
 
 
 @dataclass
 class MazeDataBase:
+    """
+    Handles the exporting and saving of maze data.
+
+    Attributes:
+        maze (MazeGenerator): The active maze generator instance containing
+        the configuration, grid, entry/exit points, and solved path.
+    """
     maze: MazeGenerator
-    json_file: str = "mazes_database.json"
 
     def export_maze_txt(self, hex_rep: List[List[Cell]]) -> None:
         path = "Configs"
@@ -16,13 +30,10 @@ class MazeDataBase:
 
         with open(f"{path}/{output}", "w") as file:
             for row in hex_rep:
-                output = "".join([hex(cell.value)[2:].upper() for cell in row])
-                file.write(f"{output}\n")
+                line = "".join([hex(cell.value)[2:].upper() for cell in row])
+                file.write(f"{line}\n")
             entry_x, entry_y = self.maze.entry
             exit_x, exit_y = self.maze.exit
             file.write(f"\n{entry_x},{entry_y}\n")
             file.write(f"{exit_x},{exit_y}\n")
-            file.write(f"\n{self.maze.path}")
-
-    def export_maze_json(self) -> None:
-        pass
+            file.write(f"{self.maze.path}\n")

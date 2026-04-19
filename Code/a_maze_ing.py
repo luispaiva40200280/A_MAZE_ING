@@ -1,3 +1,18 @@
+"""
+Main entry point for the A-Maze-Ing terminal application.
+
+This script bootstraps the maze generation engine. It is responsible for:
+    - Parsing command-line arguments to locate the required configuration file.
+    - Validating the configuration data using the Pydantic `MazeConfig` model.
+    - Initializing the core components: `MazeGenerator`, `Controller` (UI),
+      and `MazeDataBase` (I/O).
+    - Executing the initial maze generation and exporting the result to disk.
+    - Launching the interactive terminal menu loop.
+    - Providing global, graceful error handling for configuration validation
+      failures and sudden user interrupts (Ctrl+C).
+Usage:
+    python3 a_maze_ing.py <config_file.txt>
+"""
 import time
 import sys
 import os
@@ -49,7 +64,7 @@ invalid data:\033[0m")
     except KeyboardInterrupt:
         # If they press Ctrl+C ANYWHERE, Python jumps straight here!
         menu.clean_screen()
-        time.sleep(2)
+        time.sleep(.7)
         sys.exit(0)
     except ValueError as e:
         print(f"\033[93m Error': {e}\033[0m")

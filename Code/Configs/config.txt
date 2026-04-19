@@ -1,17 +1,31 @@
 # --- Mandatory configuration part ---- #
-WIDTH=45
-HEIGHT=18
+WIDTH=4
+HEIGHT=4
 ENTRY=0,0
-EXIT=44,17
+EXIT=3,1
 OUTPUT_FILE=maze.txt
-PERFECT=false
+PERFECT=TRUE
 
-# --- ADDITIONAL KEYS
-THEME=INFERNO
-SEED=PORTO
-DECOUPLE_ENTRY=true
-ALGORITHM=bfs
+# ==========================================
+# --- ADDITIONAL KEYS (OPTIONAL) ---
+# Uncomment (remove the '#') to use these.
+# ==========================================
 
-#--- DONT CHANGE ANY OF THIS LINES
-#Algo ==> "PRIMS", "HUNT_KILL"
-#
+#THEME=INFERNO
+#ALGORITHM=HUNT_KILL
+#DECOUPLE_ENTRY=false
+
+
+# THEME: Sets the terminal color palette for the HUD and the maze walls.
+# Available options: CYBERPUNK, INFERNO, NORMINETTE, HACKER, FOREST
+
+# SEED: Forces the generator to use a specific seed for reproducible mazes.
+# Can be any text or number (e.g., PORTO, 42, 8183). 
+#SEED=PORTO
+
+# ALGORITHM: Chooses the specific mathematical constructor used to carve the maze.
+# Available options: PRIMS, HUNT_KILL
+
+# DECOUPLE_ENTRY: Determines where the algorithm begins carving.
+# true  = Generation starts exactly at the ENTRY coordinate.
+# false = Generation always starts at the top-left (0,0).

@@ -1,5 +1,24 @@
 """
+Centralized Algorithm Registry for the Maze Generator.
 
+This module implements the Registry Design Pattern to manage, categorize, and
+route all mathematical algorithms used within the application. By decoupling
+the algorithm implementations from the core execution engine and user
+interface, this registry enables dynamic algorithm selection,
+seamless UI menu integration, and strict runtime validation
+(e.g., preventing a solver from being used to construct a maze).
+
+Components:
+    AlgoMetadata (dataclass): A strongly-typed data structure storing the
+        metadata for a single algorithm. It tracks the pretty-formatted
+        display `name` (used by the terminal HUD), the `job` category
+        ("construct" for maze generation, "solve" for pathfinding), and the
+        `func` pointer (the callable executable for the algorithm itself).
+
+    ALGORITHM_REGISTRY (Dict[str, AlgoMetadata]): The primary global dictionary
+        acting as the single source of truth for all available algorithms. The
+        keys are standardized configuration strings (e.g., "PRIMS", "BFS"),
+        which are parsed directly from the user's `config.txt`.
 """
 from dataclasses import dataclass
 from typing import Callable, Dict, Any

@@ -1,5 +1,9 @@
 """
-this algor is going to be for creating imperfect mazes
+Implementation of the Hunt and Kill algorithm for maze generation.
+
+Hunt and Kill natively produces a "perfect" maze
+(a uniform spanning tree with no loops). If an imperfect
+(braided) maze is desired, loops must be manually injected post-generation.
 """
 import random
 from typing import List, Tuple, Set, Callable, Any
@@ -17,7 +21,37 @@ def hunt_and_kill_algo(
     rng: Any = None
 ) -> None:
     """
-    Maze algorithm to create an
+    The algorithm operates in two alternating phases
+    without using a memory stack:
+
+    1. The "Walk" Phase: Starting from an active cell, it performs a random
+       walk through unvisited neighbors, smashing walls and marking cells as
+       visited until it reaches a dead end (becomes trapped).
+
+    2. The "Hunt" Phase: Once trapped, it performs a systematic, top-to-bottom,
+       left-to-right scan of the entire grid. It searches for the first
+       unvisited cell that is adjacent to at least one visited cell. It smashes
+       the wall between them, and the unvisited cell becomes the new starting
+       point for a new Walk phase.
+
+    This process repeats until the Hunt phase fails to
+    find any unvisited cells, meaning the grid is fully connected.
+    Args:
+        grid (List[List[Cell]]): The 2D array of Cell objects to be carved.
+        width (int): The maximum width constraint of the grid.
+        height (int): The maximum height constraint of the grid.
+        start_coord (Tuple[int, int]): The (x, y) coordinates where the initial
+            random walk should begin.
+        protected (Set[Tuple[int, int]] | None, optional): A set of coordinates
+            (e.g., the '42' pattern) that the algorithm is strictly forbidden
+            from modifying or utilizing as paths. Defaults to None.
+        on_step (Callable[[Any, Any], None] | None, optional): A callback hook
+            triggered after every successful wall breach.
+            Passes the two connected Cell objects to drive step-by-step
+            UI rendering. Defaults to None.
+        rng (Any, optional): A seeded random number generator
+        instance to ensure reproducibility. If omitted, the standard
+        random module is used.
     """
     if protected is None:
         protected = set()

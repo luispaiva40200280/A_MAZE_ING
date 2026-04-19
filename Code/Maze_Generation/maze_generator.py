@@ -63,12 +63,13 @@ class MazeGenerator:
         self.seed = (maze_config.seed if maze_config.seed
                      else random.randint(0, 9999))
         self.rgn = random.Random(self.seed)
-        self.date = datetime.now()
+        self.date = datetime.now().strftime('%H:%M:%S')
         self.path = ""
         self.solved = False
         self.decouple = maze_config.decouple_entry
         self.perfect = maze_config.perfect
         self.algo_name = maze_config.algorithm
+        self._pattern_warning_shown = False
 
     def calculate_offsets(self) -> None:
         """
@@ -98,7 +99,11 @@ class MazeGenerator:
         # Add a small buffer (e.g., +4) so the pattern isn't
         # touching the outer walls
         if self.width < (width_patt + 4) or self.height < (height_patt + 4):
-            # The maze is too small! Gracefully exit without carving anything.
+            if not self._pattern_warning_shown:
+                print("\033[33m[Warning] Maze is too small to carve the '42'"
+                      "pattern. Skipping...\033[0m", end="", flush=True)
+                time.sleep(1.5)
+                self._pattern_warning_shown = True
             return
         for dy, row in enumerate(PATTERN):
             for dx, char in enumerate(row):
@@ -115,7 +120,7 @@ class MazeGenerator:
         bounding Viewport, and paints every closed cell block-by-block
         using the active Theme colors.
         """
-        os.system("cls" if os.name == "nt" else "clear")
+        os.system("clear")
         print("\033[2J\033[?25l", end="")
         self.viewport.draw()
         # 1. Extract the active theme colors
@@ -183,9 +188,20 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
                 print(f"\033[{cy};{cx}H{top}", end="")
                 print(f"\033[{cy + 1};{cx}H{middle}", end="")
             sys.stdout.flush()
-            time.sleep(0.004)
+            # time.sleep(0.004)
 
     def _handle_imperfect_mazes(self) -> None:
+        """
+        Converts a perfect maze into an imperfect 'braided' maze.
+        If the configuration specifies an imperfect maze (PERFECT=false),
+        this method scans the grid to identify "dead ends"
+        (cells enclosed by exactly three walls).
+        It then randomly selects a subset of these dead ends (20%)
+        and smashes an adjacent solid wall to connect them to a
+        neighboring cell.
+        This process creates loops and alternate routes while strictly avoiding
+        breaches to the absolute outer boundaries or the protected '42'.
+        """
         if not self.config.perfect:
             from Algor import DIRECTIONS
             # Step A: Find all the "Dead Ends" in the maze
@@ -277,21 +293,42 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
         hud_y = self.viewport.offset_y - 1
         theme_name = self.active_theme.name
         algo = ALGORITHM_REGISTRY[self.algo_name]
+        # 1. Build a "clean" version with NO colors just to
+        # measure the true visible length
+        clean_text = (
+            f"[ Size: {self.width}x{self.height} | "
+            f"Algo: {algo.name} | "
+            f"Theme: {theme_name} | "
+            # Formatting the date to just HH:MM:SS makes the HUD much cleaner!
+            f"Date: {self.date} | "
+            f"SEED: {self.seed} | "
+            f"DECOUPLE: {self.decouple} | "
+            f"Perfect: {self.perfect} ]"
+        )
+        # 2. Build the actual colored string
         hud_text = (
             f"\033[1;90m[\033[0m "
             f"\033[1;97mSize: \033[92m{self.width}x{self.height}\033[0m | "
             f"\033[1;97mAlgo: \033[92m{algo.name}\033[0m | "
             f"\033[1;97mTheme: \033[92m{theme_name}\033[0m | "
-            f"\033[1;97mDate: \033[92m{self.date}\033[0m | "
+            f"\033[1;97mDate: \033[92m{self.date}\033[0m |"
             f"\033[1;97mSEED: \033[92m{self.seed}\033[0m | "
-            f"\033[1;97mDECOUPLE Entry: \033[92m{self.decouple}\033[0m | "
+            f"\033[1;97mDECOUPLE: \033[92m{self.decouple}\033[0m | "
             f"\033[1;97mPerfect: \033[92m{self.perfect}\033[0m "
             "\033[1;90m]\033[0m"
         )
-
-        # Print the HUD perfectly aligned with the left edge of the maze
-        print(f"\033[{hud_y};{self.viewport.offset_x}H\033[K{hud_text}",
-              end="", flush=True)
+        # 3. Calculate the perfect center X coordinate
+        visible_length = len(clean_text)
+        center_x = (self.viewport.offset_x +
+                    (self.viewport.width // 2) - (visible_length // 2))
+        # Safety check: Ensure we don't accidentally push it off the
+        # left edge of the box
+        center_x = max(1, center_x)
+        # 4. First, clear the entire row above the maze (\033[K at the offset)
+        print(f"\033[{hud_y};{self.viewport.offset_x}H\033[K", end="")
+        # 5. Then, jump to the perfectly centered coordinate and
+        # print the colored HUD!
+        print(f"\033[{hud_y};{center_x}H{hud_text}", end="", flush=True)
 
     def reset_grid(self) -> None:
         """
@@ -304,7 +341,7 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
                 cell.value = 15
         self.seed = random.randint(0, 9999)
         self.rgn = random.Random(self.seed)
-        self.date = datetime.now()
+        self.date = datetime.now().strftime('%H:%M:%S')
         self.solved = False
 
     def decode_path(self) -> List[Tuple[int, int]]:
@@ -326,6 +363,11 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
         return path_coord
 
     def toogle_solve_path(self) -> None:
+        """
+        Toggles the terminal visibility of the maze's shortest solution path.
+        If the path is currently displayed, it clears it by redrawing the base
+        ASCII grid. If the path is hidden, it triggers the path animation.
+        """
         if self.solved:
             self.draw_ascii_grid()
             self.draw_stats_hud()
@@ -335,6 +377,15 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
 
     @supress_terminal_echos
     def show_solve_path(self, value: Optional[Union[int, float]] = 0) -> None:
+        """
+        Animates the shortest path from the entry to the exit on the terminal.
+        Uses the decoded coordinate list to draw custom colored ANSI blocks
+        ("bridges") between cells to visually represent the solution.
+        Args:
+            value (Optional[Union[int, float]]): The delay in seconds between
+            drawing each path segment, creating an animation effect. Defaults
+            to 0 (instant rendering).
+        """
         path_coord = self.decode_path()
         if not path_coord:
             print(f"{self.active_theme.get_color('logo')}\

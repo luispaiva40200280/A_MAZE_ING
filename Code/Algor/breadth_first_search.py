@@ -1,6 +1,10 @@
 """
-this algorithm is to solve the mazes
-and find the shortes path possible
+Implementation of the Breadth-First Search (BFS) algorithm
+for maze solving.
+
+BFS is the optimal pathfinding algorithm for unweighted grid graphs
+(such as these mazes) because its level-by-layer exploration
+naturally guarantees finding the absolute shortest path between two points.
 """
 from Maze_Generation.helper_maze_classes import Cell
 from typing import List, Tuple
@@ -14,6 +18,33 @@ def breadth_first_search(
         entry: Tuple[int, int],
         exit: Tuple[int, int],
         ) -> str:
+    """
+    Solves the maze by finding the shortest path from entry to exit.
+
+    This algorithm uses a double-ended queue (`collections.deque`) to evaluate
+    accessible cells in a First-In-First-Out (FIFO) sequence. For each cell, it
+    checks the 4-bit wall mask against the available cardinal directions. If a
+    wall is open (`(current_cell.value & bit) == 0`) and the adjacent cell has
+    not been visited, it appends that neighbor to the queue along with the
+    newly appended directional character.
+
+    The use of a `visited` set ensures the algorithm never backtracks or enters
+    an infinite loop within braided (imperfect) mazes.
+
+    Args:
+        grid (list[List[Cell]]): The completed 2D matrix of Cell objects
+            representing the maze.
+        width (int): The total width of the maze.
+        height (int): The total height of the maze.
+        entry (Tuple[int, int]): The (x, y) starting coordinate.
+        exit (Tuple[int, int]): The (x, y) target destination coordinate.
+
+    Returns:
+        str: A string of concatenated directional characters (e.g., 'NNEESW')
+        representing the exact shortest sequence of moves to reach the exit.
+        Returns 'UNSOLVABLE' if the queue is exhausted without finding
+        the exit.
+    """
     from . import DIRECTIONS, LETTER_MAP
     queue = deque([(entry[0], entry[1], "")])
     visited = {entry}

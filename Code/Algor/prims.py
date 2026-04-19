@@ -19,10 +19,8 @@ def prims_algorithm(
     on_step: Callable[[Any, Any], None] | None = None,
     rng: Any = None
 ) -> None:
-    from . import DIRECTIONS
     """
-    Executes Randomized Prim's Algorithm to carve a maze into the provided
-    grid.The algorithm works by maintaining a "frontier" of cells adjacent
+    The algorithm works by maintaining a "frontier" of cells adjacent
     to the currently carved maze. It randomly selects a frontier cell,
     connects it to a random adjacent cell already inside the maze
     (by modifying their wall bitmasks), and then adds the newly accessible
@@ -44,6 +42,8 @@ def prims_algorithm(
             objects as arguments.
             Used to drive the step-by-step UI animation. Defaults to None.
     """
+    from . import DIRECTIONS
+
     if protected is None:
         protected = set()
     rng = rng or random

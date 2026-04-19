@@ -1,3 +1,9 @@
+"""
+Enum class to store the colors and themes for the
+MazeGenerator to use in the rendering of the strings
+on the terminal
+"""
+
 from enum import Enum
 
 
