@@ -88,14 +88,11 @@ def prims_algorithm(
 
         if maze_neighbors:
             nx, ny, bit, opp = rng.choice(maze_neighbors)
-
             # Modify the .value property of the Cell objects
             grid[fy][fx].value &= ~bit
             grid[ny][nx].value &= ~opp
-
             in_maze.add((fx, fy))
             add_to_frontier(fx, fy)
-
             # Trigger the Delta Renderer (Corrected Y/X indexing)
             if on_step:
                 on_step(grid[fy][fx], grid[ny][nx])

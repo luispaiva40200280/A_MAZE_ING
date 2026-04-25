@@ -40,7 +40,7 @@ def supress_terminal_echos(func: Callable[..., Any]) -> Callable[..., Any]:
         try:
             # 2. Turn off ECHO (prevents key presses from showing)
             new_settings = termios.tcgetattr(fd)
-            new_settings[3] = new_settings[3] & ~termios.ECHO
+            new_settings[3] &= ~termios.ECHO
             termios.tcsetattr(fd, termios.TCSADRAIN, new_settings)
             return func(*args, **kwargs)
         finally:

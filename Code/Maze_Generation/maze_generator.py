@@ -149,9 +149,9 @@ class MazeGenerator:
 
             output += f"\033[{self.offset_y + (y * 2)};{self.offset_x}\
 H{top_row}"
+
             output += f"\033[{self.offset_y + (y * 2) + 1};{self.offset_x}\
 H{mid_row}"
-
         boot_row = ""
         # 3. Refactor the South wall (bottom-most edge)
         for x in range(self.width):
@@ -171,7 +171,7 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
 
     def animated_frame(self, cell1: Cell, cell2: Cell) -> None:
         """
-        A callback function triggered by Prim's Algorithm to draw walls
+        A callback function triggered by Algorithm's to draw walls
         breaking in real-time. Applies a 'tweening' animation sequence
         to simulate walls dissolving into dust.
         Args:
@@ -188,7 +188,7 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
                 print(f"\033[{cy};{cx}H{top}", end="")
                 print(f"\033[{cy + 1};{cx}H{middle}", end="")
             sys.stdout.flush()
-            # time.sleep(0.004)
+            time.sleep(0.004)
 
     def _handle_imperfect_mazes(self) -> None:
         """
@@ -272,7 +272,7 @@ H{boot_row}{last_wall_bg}  {ansi_reset}"
                 width=self.width,
                 height=self.height,
                 entry=self.entry,
-                exit=self.exit
+                exit=self.exit,
             )
             if not self.perfect:
                 self._handle_imperfect_mazes()

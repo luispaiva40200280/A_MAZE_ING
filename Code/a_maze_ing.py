@@ -59,7 +59,8 @@ invalid data:\033[0m")
             failed_field = (error.get("loc", ())[0] if error.get("loc")
                             else "General")
             reason = error.get("msg")
-            print(f"\033[93m ╰─▶ '{failed_field}': {reason}\033[0m")
+            print(f"\033[93m ╰─▶ '{failed_field}': {reason}\033[0m",
+                  file=sys.stderr)
         time.sleep(2)
     except KeyboardInterrupt:
         # If they press Ctrl+C ANYWHERE, Python jumps straight here!
@@ -67,5 +68,8 @@ invalid data:\033[0m")
         time.sleep(.7)
         sys.exit(0)
     except ValueError as e:
-        print(f"\033[93m Error': {e}\033[0m")
+        print(f"\033[93m Error': {e}\033[0m", file=sys.stderr)
+        time.sleep(2)
+    except PermissionError as e:
+        print(f"\033[93m Error': {e}\033[0m", file=sys.stderr)
         time.sleep(2)

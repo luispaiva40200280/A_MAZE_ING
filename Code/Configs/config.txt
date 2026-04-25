@@ -1,8 +1,8 @@
 # --- Mandatory configuration part ---- #
-WIDTH=4
-HEIGHT=4
+WIDTH=43
+HEIGHT=18
 ENTRY=0,0
-EXIT=3,1
+EXIT=40,12
 OUTPUT_FILE=maze.txt
 PERFECT=TRUE
 
@@ -12,7 +12,7 @@ PERFECT=TRUE
 # ==========================================
 
 #THEME=INFERNO
-#ALGORITHM=HUNT_KILL
+ALGORITHM=HUNT_KILL
 #DECOUPLE_ENTRY=false
 
 

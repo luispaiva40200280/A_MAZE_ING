@@ -7,7 +7,7 @@ BFS is the optimal pathfinding algorithm for unweighted grid graphs
 naturally guarantees finding the absolute shortest path between two points.
 """
 from Maze_Generation.helper_maze_classes import Cell
-from typing import List, Tuple
+from typing import List, Tuple, Callable, Any
 from collections import deque
 
 
@@ -17,6 +17,7 @@ def breadth_first_search(
         height: int,
         entry: Tuple[int, int],
         exit: Tuple[int, int],
+        on_step: Callable[[Any, Any], None] | None = None,
         ) -> str:
     """
     Solves the maze by finding the shortest path from entry to exit.
@@ -61,5 +62,8 @@ def breadth_first_search(
                     if not (new_x, new_y) in visited:
                         visited.add((new_x, new_y))
                         direction = LETTER_MAP[bit]
+                        next_cell = grid[new_y][new_x]
+                        if on_step:
+                            on_step(current_cell, next_cell)
                         queue.append((new_x, new_y, path + direction))
     return 'UNSOLVABLE'

@@ -28,7 +28,7 @@ $(MARKER): $(REQ)
 run: install lint
 	@echo "Start A_MAZE_ING in a virtual env..."
 # open a new window and run the Maze_Generation
-	@gnome-terminal --window --maximize -- bash -c "$(PY) $(SCRIPT) $(CONFIG);"
+	@gnome-terminal --window --maximize -- bash -c "$(PY) $(SCRIPT) $(CONFIG)"
 
 debug: install
 	@echo  "Start debuging the Maze Generator"
