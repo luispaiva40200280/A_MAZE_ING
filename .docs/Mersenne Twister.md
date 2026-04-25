@@ -1,0 +1,3 @@
+The Mersenne Twister is one of the most widely tested and reliable PRNGs in computer science. It operates by maintaining a large internal state (an array of numbers). When you ask Python for a random number (e.g., `random.randint(1, 10)`), the algorithm performs a series of bitwise operations (shifts and XORs) on its internal state to "twist" the numbers, outputting a highly unpredictable result and updating its state for the next call.
+
+**Critical Constraint:** Because the [[Core Engine The Algorithms Registry|Random]] module is deterministic, it is strictly forbidden in cryptographic applications (like generating passwords or security tokens). If an attacker knows the algorithm's current state, they can perfectly predict every future "random" number it will generate.
